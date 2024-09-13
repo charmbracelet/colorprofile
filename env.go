@@ -9,7 +9,7 @@ import (
 	"github.com/xo/terminfo"
 )
 
-// DetectProfile returns the color profile based on the terminal output, and
+// Detect returns the color profile based on the terminal output, and
 // environment variables. This respects NO_COLOR, CLICOLOR, and CLICOLOR_FORCE
 // environment variables.
 //
@@ -24,15 +24,14 @@ import (
 //     colors but not text decoration, i.e. bold, italic, faint, etc.
 //
 // See https://no-color.org/ and https://bixense.com/clicolors/ for more information.
-func DetectProfile(output io.Writer, environ []string) (p Profile) {
+func Detect(output io.Writer, environ []string) (p Profile) {
 	out, ok := output.(term.File)
 	isatty := ok && term.IsTerminal(out.Fd())
 	return colorProfile(isatty, environ)
 }
 
-// EnvProfile returns the color profile based on the terminal environment
-// variables. This respects NO_COLOR, CLICOLOR, and CLICOLOR_FORCE environment
-// variables.
+// Env returns the color profile based on the terminal environment variables.
+// This respects NO_COLOR, CLICOLOR, and CLICOLOR_FORCE environment variables.
 //
 // The rules as follows:
 //   - TERM=dumb is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
@@ -45,7 +44,7 @@ func DetectProfile(output io.Writer, environ []string) (p Profile) {
 //     colors but not text decoration, i.e. bold, italic, faint, etc.
 //
 // See https://no-color.org/ and https://bixense.com/clicolors/ for more information.
-func EnvProfile(environ []string) (p Profile) {
+func Env(environ []string) (p Profile) {
 	return colorProfile(true, environ)
 }
 

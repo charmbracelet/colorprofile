@@ -142,7 +142,7 @@ var cases = []struct {
 func TestEnvColorProfile(t *testing.T) {
 	for i, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			p := EnvProfile(tc.environ)
+			p := Env(tc.environ)
 			if p != tc.expected {
 				t.Errorf("case %d: expected %v, got %v", i, tc.expected, p)
 			}

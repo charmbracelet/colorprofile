@@ -40,7 +40,7 @@ func printColor(profile colorprofile.Profile, c color.Color) {
 
 func main() {
 	// Get the terminal's color profile
-	profile := colorprofile.DetectProfile(os.Stdout, os.Environ())
+	profile := colorprofile.Detect(os.Stdout, os.Environ())
 
 	// Convert 24-bit RGB color to the terminal's color profile.
 	// This will return the closest color in the profile's palette

@@ -22,7 +22,7 @@ import (
 func NewWriter(w io.Writer, environ []string) *Writer {
 	return &Writer{
 		Forward: w,
-		Profile: DetectProfile(w, environ),
+		Profile: Detect(w, environ),
 	}
 }
 
