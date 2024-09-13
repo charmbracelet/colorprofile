@@ -82,32 +82,32 @@ func (w *Writer) Write(p []byte) (int, error) {
 				switch param {
 				case 30, 31, 32, 33, 34, 35, 36, 37: // 8-bit foreground color
 					if w.Profile > ANSI {
-						convertColorAppend(ansi.BasicColor(param-30), foreground, &pen) //nolint:gosec
 						continue
 					}
+					convertColorAppend(ansi.BasicColor(param-30), foreground, &pen) //nolint:gosec
 				case 39: // default foreground color
 					if w.Profile > ANSI {
 						continue
 					}
 				case 40, 41, 42, 43, 44, 45, 46, 47: // 8-bit background color
 					if w.Profile > ANSI {
-						convertColorAppend(ansi.BasicColor(param-40), background, &pen) //nolint:gosec
 						continue
 					}
+					convertColorAppend(ansi.BasicColor(param-40), background, &pen) //nolint:gosec
 				case 49: // default background color
 					if w.Profile > ANSI {
 						continue
 					}
 				case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
 					if w.Profile > ANSI {
-						convertColorAppend(ansi.BasicColor(param-90+8), foreground, &pen) //nolint:gosec
 						continue
 					}
+					convertColorAppend(ansi.BasicColor(param-90+8), foreground, &pen) //nolint:gosec
 				case 100, 101, 102, 103, 104, 105, 106, 107: // 8-bit bright background color
 					if w.Profile > ANSI {
-						convertColorAppend(ansi.BasicColor(param-100+8), background, &pen) //nolint:gosec
 						continue
 					}
+					convertColorAppend(ansi.BasicColor(param-100+8), background, &pen) //nolint:gosec
 				case 59: // default underline color
 					if w.Profile > ANSI {
 						continue
