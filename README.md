@@ -9,15 +9,22 @@
 A simple, powerful package for detecting terminal color profiles, CSI
 sequences, and performing color degradation.
 
+## Example
+
+Import the lib.
 ```go
 import "github.com/charmbracelet/colorprofile"
+```
 
-// Find the color profile for stdout.
+Detect the color profile.
+```go
 p := colorprofile.Detect(os.Stdout, os.Environ())
-fmt.Printf("Your color profile is what we call '%s'.\n\n", p)
+fmt.Printf("Your color profile is what we call '%s'.", p)
+```
 
-// Let's talk about the profile.
-fmt.Printf("You know, your colors are quite %s.\n\n", func() string {
+Let's talk about the profile.
+```go
+fmt.Printf("You know, your colors are quite %s.", func() string {
     switch p {
     case colorprofile.TrueColor:
         return "fancy"
@@ -30,36 +37,36 @@ fmt.Printf("You know, your colors are quite %s.\n\n", func() string {
     case colorprofile.NoTTY:
         return "naughty!"
     }
-    // This should never happen.
-    return "...IDK"
+    return "...IDK" // this should never happen
 }())
+```
 
-// Here's a nice color.
-myCuteColor := color.RGBA{0x6b, 0x50, 0xff, 0xff} // #6b50ff
-fmt.Printf("A cute color we like is: #%x%x%x.\n\n", myCuteColor.R, myCuteColor.G, myCuteColor.B)
+Downsample a color to the detected profile, when necessary.
+```go
+c := color.RGBA{0x6b, 0x50, 0xff, 0xff} // #6b50ff
+convertedColor := p.Convert(c)
+```
 
-// Let's convert it to the detected color profile.
-theColorWeNeed := p.Convert(myCuteColor)
-fmt.Printf("This terminal needs it to be a %T, at best...\n", theColorWeNeed)
-fmt.Printf("...which would be %#v.\n\n", theColorWeNeed)
+Convert it to ANSI256.
+```go
+ansi256Color := colorprofile.ANSI256.Convert(c)
+```
 
-// Now let's convert it to a color profile that only supports up to 256
-// colors.
-ansi256Color := colorprofile.ANSI256.Convert(myCuteColor)
-fmt.Printf("Apple Terminal would want this color to be: %d (an %T).\n\n", ansi256Color, ansi256Color)
-
-// But really, who has time to convert? Not you? Well, kiddo, here's
-// a magical writer that will just auto-convert whatever ANSI you throw at
-// it to the appropriate color profile.
-myFancyANSI := "\x1b[38;2;107;80;255mCute puppy!!\x1b[m\n"
+Magically downsample any ANSI to the detected profile, when necessary.
+```go
+fancyANSI := "\x1b[38;2;107;80;255mCute puppy!!\x1b[m"
 w := colorprofile.NewWriter(os.Stdout, os.Environ())
-w.Printf(myFancyANSI)
+w.Printf(fancyANSI)
+```
 
-// But we're old school. Make the writer only use 4-bit ANSI, 1980s style.
+Magically downsample to 4-bit ANSI.
+```go
 w.Profile = colorprofile.ANSI
 w.Printf(myFancyANSI)
+```
 
-// That's too modern. Let's go back to MIT in the 1970s.
+Strip ANSI altogether.
+```go
 w.Profile = colorprofile.NoTTY
 w.Printf(myFancyANSI) // not so fancy anymore
 ```
@@ -67,7 +74,7 @@ w.Printf(myFancyANSI) // not so fancy anymore
 ## Get it
 
 ```sh
-go get github.com/charmbracelet/colorprofile@latest
+go get "github.com/charmbracelet/colorprofile@latest"
 ```
 
 ## Feedback
