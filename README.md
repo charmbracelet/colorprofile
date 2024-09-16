@@ -1,4 +1,4 @@
-# Color Profile
+# Colorprofile
 
 <p>
     <a href="https://github.com/charmbracelet/colorprofile/releases"><img src="https://img.shields.io/github/release/charmbracelet/colorprofile.svg" alt="Latest Release"></a>
@@ -6,24 +6,21 @@
     <a href="https://github.com/charmbracelet/colorprofile/actions"><img src="https://github.com/charmbracelet/colorprofile/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
 </p>
 
-A simple, powerful package for detecting terminal color profiles, CSI
-sequences, and performing color degradation.
+A simple, powerful—and at times magical—package for detecting terminal color
+profiles, CSI sequences, and performing color degradation.
 
-## Example
+## Detecting the terminal’s color profile
 
-Import the lib.
+Detecting the terminal’s color profile is easy.
+
 ```go
 import "github.com/charmbracelet/colorprofile"
-```
 
-Detect the color profile.
-```go
+// Detect the color profile. If you’re planning on writing to stderr you'd want
+// to use os.Stderr instead.
 p := colorprofile.Detect(os.Stdout, os.Environ())
-fmt.Printf("Your color profile is what we call '%s'.", p)
-```
 
-Let's talk about the profile.
-```go
+// Comment on the profile.
 fmt.Printf("You know, your colors are quite %s.", func() string {
     switch p {
     case colorprofile.TrueColor:
@@ -41,40 +38,44 @@ fmt.Printf("You know, your colors are quite %s.", func() string {
 }())
 ```
 
-Downsample a color to the detected profile, when necessary.
+## Downsampling colors
+
+When necessary, colors can be downsampled to a given profile, or manually
+downsampled to a specific profile.
+
 ```go
+p := colorprofile.Detect(os.Stdout, os.Environ())
 c := color.RGBA{0x6b, 0x50, 0xff, 0xff} // #6b50ff
+
+// Downsample to the detected profile, when necessary.
 convertedColor := p.Convert(c)
-```
 
-Convert it to ANSI256.
-```go
+// Or manually convert to a given profile.
 ansi256Color := colorprofile.ANSI256.Convert(c)
+ansiColor := colorprofile.ANSI.Convert(c)
+noColor := colorprofile.Ascii.Convert(c)
+noANSI := colorprofile.NoTTY.Convert(c)
 ```
 
-Magically downsample any ANSI to the detected profile, when necessary.
+## Automatic downsampling with a Writer
+
+You can also magically downsample colors in ANSI output, when necessary. If
+output is not a TTY ANSI will be dropped entirely.
+
 ```go
 fancyANSI := "\x1b[38;2;107;80;255mCute puppy!!\x1b[m"
+
+// Automatically downsample for the terminal at stdout.
 w := colorprofile.NewWriter(os.Stdout, os.Environ())
 w.Printf(fancyANSI)
-```
 
-Magically downsample to 4-bit ANSI.
-```go
+// Downsample to 4-bit ANSI.
 w.Profile = colorprofile.ANSI
 w.Printf(myFancyANSI)
-```
 
-Strip ANSI altogether.
-```go
+// Strip ANSI altogether.
 w.Profile = colorprofile.NoTTY
-w.Printf(myFancyANSI) // not so fancy anymore
-```
-
-## Get it
-
-```sh
-go get "github.com/charmbracelet/colorprofile@latest"
+w.Printf(myFancyANSI) // not as fancy
 ```
 
 ## Feedback
