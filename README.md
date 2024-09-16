@@ -63,14 +63,18 @@ You can also magically downsample colors in ANSI output, when necessary. If
 output is not a TTY ANSI will be dropped entirely.
 
 ```go
-fancyANSI := "\x1b[38;2;107;80;255mCute puppy!!\x1b[m"
+myFancyANSI := "\x1b[38;2;107;80;255mCute \x1b[1;3mpuppy!!\x1b[m"
 
 // Automatically downsample for the terminal at stdout.
 w := colorprofile.NewWriter(os.Stdout, os.Environ())
-fmt.Fprintf(w, fancyANSI)
+fmt.Fprintf(w, myFancyANSI)
 
 // Downsample to 4-bit ANSI.
 w.Profile = colorprofile.ANSI
+fmt.Fprintf(w, myFancyANSI)
+
+// Ascii-fy, no colors.
+w.Profile = colorprofile.Ascii
 fmt.Fprintf(w, myFancyANSI)
 
 // Strip ANSI altogether.
