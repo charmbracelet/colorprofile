@@ -112,3 +112,11 @@ func TestWriter(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkWriter(b *testing.B) {
+	w := &Writer{&bytes.Buffer{}, ANSI}
+	input := []byte("\x1b[1;3;59mhello\x1b[m \x1b[38;2;255;133;55mworld\x1b[m")
+	for i := 0; i < b.N; i++ {
+		_, _ = w.Write(input)
+	}
+}
