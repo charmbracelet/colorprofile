@@ -67,15 +67,15 @@ fancyANSI := "\x1b[38;2;107;80;255mCute puppy!!\x1b[m"
 
 // Automatically downsample for the terminal at stdout.
 w := colorprofile.NewWriter(os.Stdout, os.Environ())
-w.Printf(fancyANSI)
+fmt.Fprintf(w, fancyANSI)
 
 // Downsample to 4-bit ANSI.
 w.Profile = colorprofile.ANSI
-w.Printf(myFancyANSI)
+fmt.Fprintf(w, myFancyANSI)
 
 // Strip ANSI altogether.
 w.Profile = colorprofile.NoTTY
-w.Printf(myFancyANSI) // not as fancy
+fmt.Fprintf(w, myFancyANSI) // not as fancy
 ```
 
 ## Feedback
