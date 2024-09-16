@@ -1,4 +1,4 @@
-# Color Profile
+# Colorprofile
 
 <p>
     <a href="https://github.com/charmbracelet/colorprofile/releases"><img src="https://img.shields.io/github/release/charmbracelet/colorprofile.svg" alt="Latest Release"></a>
@@ -6,50 +6,76 @@
     <a href="https://github.com/charmbracelet/colorprofile/actions"><img src="https://github.com/charmbracelet/colorprofile/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
 </p>
 
-Color Profile is a Go package for working with terminal color profiles and
-color degradation.
+A simple, powerful—and at times magical—package for detecting terminal color
+profiles and performing color (and CSI) degradation.
 
-## Installation
+## Detecting the terminal’s color profile
 
-```sh
-go get github.com/charmbracelet/colorprofile@latest
-```
-
-## Usage
+Detecting the terminal’s color profile is easy.
 
 ```go
-package main
+import "github.com/charmbracelet/colorprofile"
 
-import (
-	"fmt"
-	"image/color"
-	"os"
+// Detect the color profile. If you’re planning on writing to stderr you'd want
+// to use os.Stderr instead.
+p := colorprofile.Detect(os.Stdout, os.Environ())
 
-	"github.com/charmbracelet/colorprofile"
-	"github.com/lucasb-eyer/go-colorful"
-)
+// Comment on the profile.
+fmt.Printf("You know, your colors are quite %s.", func() string {
+    switch p {
+    case colorprofile.TrueColor:
+        return "fancy"
+    case colorprofile.ANSI256:
+        return "1990s fancy"
+    case colorprofile.ANSI:
+        return "normcore"
+    case colorprofile.Ascii:
+        return "ancient"
+    case colorprofile.NoTTY:
+        return "naughty!"
+    }
+    return "...IDK" // this should never happen
+}())
+```
 
-func printColor(profile colorprofile.Profile, c color.Color) {
-	// Print the converted color in the terminal
-	c = profile.Convert(c)
-	info := fmt.Sprintf("%T(%v)", c, c)
-	col, _ := colorful.MakeColor(c)
-	fmt.Println("This is a nice color:", col.Hex(), info)
-}
+## Downsampling colors
 
-func main() {
-	// Get the terminal's color profile
-	profile := colorprofile.Detect(os.Stdout, os.Environ())
+When necessary, colors can be downsampled to a given profile, or manually
+downsampled to a specific profile.
 
-	// Convert 24-bit RGB color to the terminal's color profile.
-	// This will return the closest color in the profile's palette
-	// if the terminal doesn't support 24-bit color.
-	mycolor := color.RGBA{0xff, 0x7b, 0xf5, 0xff} // #ff7bf5
-	printColor(profile, mycolor)
+```go
+p := colorprofile.Detect(os.Stdout, os.Environ())
+c := color.RGBA{0x6b, 0x50, 0xff, 0xff} // #6b50ff
 
-	// Use ANSI256 color profile
-	printColor(colorprofile.ANSI256, mycolor)
-}
+// Downsample to the detected profile, when necessary.
+convertedColor := p.Convert(c)
+
+// Or manually convert to a given profile.
+ansi256Color := colorprofile.ANSI256.Convert(c)
+ansiColor := colorprofile.ANSI.Convert(c)
+noColor := colorprofile.Ascii.Convert(c)
+noANSI := colorprofile.NoTTY.Convert(c)
+```
+
+## Automatic downsampling with a Writer
+
+You can also magically downsample colors in ANSI output, when necessary. If
+output is not a TTY ANSI will be dropped entirely.
+
+```go
+fancyANSI := "\x1b[38;2;107;80;255mCute puppy!!\x1b[m"
+
+// Automatically downsample for the terminal at stdout.
+w := colorprofile.NewWriter(os.Stdout, os.Environ())
+fmt.Fprintf(w, fancyANSI)
+
+// Downsample to 4-bit ANSI.
+w.Profile = colorprofile.ANSI
+fmt.Fprintf(w, myFancyANSI)
+
+// Strip ANSI altogether.
+w.Profile = colorprofile.NoTTY
+fmt.Fprintf(w, myFancyANSI) // not as fancy
 ```
 
 ## Feedback
@@ -67,4 +93,3 @@ Part of [Charm](https://charm.sh).
 <a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400"></a>
 
 Charm热爱开源 • Charm loves open source • نحنُ نحب المصادر المفتوحة
-
