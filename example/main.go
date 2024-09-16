@@ -56,6 +56,10 @@ func main() {
 	w.Profile = colorprofile.ANSI
 	w.Println("4-bit ANSI:", myFancyANSI)
 
+	// Too colorful. Use black and white only.
+	w.Profile = colorprofile.Ascii
+	w.Println("Old school, cool", myFancyANSI) // no colors
+	
 	// That's way too modern. Let's go back to MIT in the 1970s.
 	w.Profile = colorprofile.NoTTY
 	w.Println("No TTY :(", myFancyANSI) // less fancy
