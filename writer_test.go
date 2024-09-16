@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"testing"
+
+	"github.com/charmbracelet/x/ansi"
 )
 
 var writers = map[Profile]func(io.Writer) *Writer{
@@ -21,7 +23,6 @@ var writer_cases = []struct {
 	expectedANSI256   string
 	expectedANSI      string
 	expectedAscii     string
-	expectedNoTTY     string
 }{
 	{
 		name: "empty",
@@ -33,7 +34,6 @@ var writer_cases = []struct {
 		expectedANSI256:   "hello world",
 		expectedANSI:      "hello world",
 		expectedAscii:     "hello world",
-		expectedNoTTY:     "hello world",
 	},
 	{
 		name:              "simple style attributes",
@@ -42,43 +42,70 @@ var writer_cases = []struct {
 		expectedANSI256:   "hello \x1b[1mworld\x1b[m",
 		expectedANSI:      "hello \x1b[1mworld\x1b[m",
 		expectedAscii:     "hello \x1b[1mworld\x1b[m",
-		expectedNoTTY:     "hello world",
 	},
 	{
-		name:              "simple basic color ",
+		name:              "simple ansi color fg",
 		input:             "hello \x1b[31mworld\x1b[m",
 		expectedTrueColor: "hello \x1b[31mworld\x1b[m",
 		expectedANSI256:   "hello \x1b[31mworld\x1b[m",
 		expectedANSI:      "hello \x1b[31mworld\x1b[m",
 		expectedAscii:     "hello \x1b[mworld\x1b[m",
-		expectedNoTTY:     "hello world",
 	},
 	{
-		name:              "simple extended color",
+		name:              "default fg color after ansi color",
+		input:             "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedTrueColor: "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedANSI256:   "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedANSI:      "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedAscii:     "\x1b[mhello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "ansi color fg and bg",
+		input:             "\x1b[31;42mhello world\x1b[m",
+		expectedTrueColor: "\x1b[31;42mhello world\x1b[m",
+		expectedANSI256:   "\x1b[31;42mhello world\x1b[m",
+		expectedANSI:      "\x1b[31;42mhello world\x1b[m",
+		expectedAscii:     "\x1b[mhello world\x1b[m",
+	},
+	{
+		name:              "bright ansi color fg and bg",
+		input:             "\x1b[91;102mhello world\x1b[m",
+		expectedTrueColor: "\x1b[91;102mhello world\x1b[m",
+		expectedANSI256:   "\x1b[91;102mhello world\x1b[m",
+		expectedANSI:      "\x1b[91;102mhello world\x1b[m",
+		expectedAscii:     "\x1b[mhello world\x1b[m",
+	},
+	{
+		name:              "simple 256 color fg",
 		input:             "hello \x1b[38;5;196mworld\x1b[m",
 		expectedTrueColor: "hello \x1b[38;5;196mworld\x1b[m",
 		expectedANSI256:   "hello \x1b[38;5;196mworld\x1b[m",
 		expectedANSI:      "hello \x1b[91mworld\x1b[m",
 		expectedAscii:     "hello \x1b[mworld\x1b[m",
-		expectedNoTTY:     "hello world",
 	},
 	{
-		name:              "simple true color",
+		name:              "256 color bg",
+		input:             "\x1b[48;5;196mhello world\x1b[m",
+		expectedTrueColor: "\x1b[48;5;196mhello world\x1b[m",
+		expectedANSI256:   "\x1b[48;5;196mhello world\x1b[m",
+		expectedANSI:      "\x1b[101mhello world\x1b[m",
+		expectedAscii:     "\x1b[mhello world\x1b[m",
+	},
+	{
+		name:              "simple true color bg",
 		input:             "hello \x1b[38;2;255;133;55mworld\x1b[m", // #ff8537
 		expectedTrueColor: "hello \x1b[38;2;255;133;55mworld\x1b[m",
 		expectedANSI256:   "hello \x1b[38;5;209mworld\x1b[m",
 		expectedANSI:      "hello \x1b[91mworld\x1b[m",
 		expectedAscii:     "hello \x1b[mworld\x1b[m",
-		expectedNoTTY:     "hello world",
 	},
 	{
-		name:              "simple background color",
+		name:              "simple ansi 256 color bg",
 		input:             "hello \x1b[48;5;196mworld\x1b[m",
 		expectedTrueColor: "hello \x1b[48;5;196mworld\x1b[m",
 		expectedANSI256:   "hello \x1b[48;5;196mworld\x1b[m",
 		expectedANSI:      "hello \x1b[101mworld\x1b[m",
 		expectedAscii:     "hello \x1b[mworld\x1b[m",
-		expectedNoTTY:     "hello world",
 	},
 }
 
@@ -103,7 +130,7 @@ func TestWriter(t *testing.T) {
 				case Ascii:
 					expected = c.expectedAscii
 				case NoTTY:
-					expected = c.expectedNoTTY
+					expected = ansi.Strip(c.input)
 				}
 				if got := buf.String(); got != expected {
 					t.Errorf("case: %d, got: %q, expected: %q", i+1, got, expected)
@@ -111,6 +138,10 @@ func TestWriter(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestNewWriterPanic(t *testing.T) {
+	_ = NewWriter(io.Discard, []string{"TERM=dumb"})
 }
 
 func BenchmarkWriter(b *testing.B) {
