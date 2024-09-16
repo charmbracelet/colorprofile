@@ -48,7 +48,7 @@ func main() {
 	// But really, who has time to convert? Not you? Well, kiddo, here's
 	// a magical writer that will just auto-convert whatever ANSI you throw at
 	// it to the appropriate color profile.
-	myFancyANSI := "\x1b[38;2;107;80;255mCute puppy!!\x1b[m"
+	myFancyANSI := "\x1b[38;2;107;80;255mCute \x1b[1;3mpuppy!!\x1b[m"
 	w := colorprofile.NewWriter(os.Stdout, os.Environ())
 	w.Println("This terminal:", myFancyANSI)
 
