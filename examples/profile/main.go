@@ -50,19 +50,19 @@ func main() {
 	// it to the appropriate color profile.
 	myFancyANSI := "\x1b[38;2;107;80;255mCute \x1b[1;3mpuppy!!\x1b[m"
 	w := colorprofile.NewWriter(os.Stdout, os.Environ())
-	w.Println("This terminal:", myFancyANSI)
+	fmt.Fprintln(w, "This terminal:", myFancyANSI)
 
 	// But we're old school. Make the writer only use 4-bit ANSI, 1980s style.
 	w.Profile = colorprofile.ANSI
-	w.Println("4-bit ANSI:", myFancyANSI)
+	fmt.Fprintln(w, "4-bit ANSI:", myFancyANSI)
 
 	// Too colorful. Use black and white only.
 	w.Profile = colorprofile.Ascii
-	w.Println("Old school, cool", myFancyANSI) // no colors
-	
+	fmt.Fprintln(w, "Old school cool:", myFancyANSI) // no colors
+
 	// That's way too modern. Let's go back to MIT in the 1970s.
 	w.Profile = colorprofile.NoTTY
-	w.Println("No TTY :(", myFancyANSI) // less fancy
+	fmt.Fprintln(w, "No TTY :(", myFancyANSI) // less fancy
 }
 
 func colorToHex(c color.Color) string {
