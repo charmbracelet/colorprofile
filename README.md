@@ -7,7 +7,7 @@
 </p>
 
 A simple, powerful—and at times magical—package for detecting terminal color
-profiles, CSI sequences, and performing color degradation.
+profiles and performing color (and CSI) degradation.
 
 ## Detecting the terminal’s color profile
 
