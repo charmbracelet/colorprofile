@@ -2,7 +2,6 @@ package colorprofile
 
 import (
 	"bytes"
-	"fmt"
 	"image/color"
 	"io"
 	"strconv"
@@ -32,21 +31,6 @@ func NewWriter(w io.Writer, environ []string) *Writer {
 type Writer struct {
 	Forward io.Writer
 	Profile Profile
-}
-
-// Print writes the given text to the underlying writer.
-func (w *Writer) Print(a ...any) (n int, err error) {
-	return fmt.Fprint(w, a...)
-}
-
-// Println writes the given text to the underlying writer followed by a newline.
-func (w *Writer) Println(a ...any) (n int, err error) {
-	return fmt.Fprintln(w, a...)
-}
-
-// Printf writes the given text to the underlying writer with the given format.
-func (w *Writer) Printf(format string, a ...any) (int, error) {
-	return fmt.Fprintf(w, format, a...)
 }
 
 // Write writes the given text to the underlying writer.
