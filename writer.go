@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"io"
+	"strconv"
 
 	"github.com/charmbracelet/x/ansi"
 )
@@ -57,101 +58,93 @@ func (w *Writer) Write(p []byte) (int, error) {
 		return io.WriteString(w.Forward, ansi.Strip(string(p)))
 	}
 
-	convertColorAppend := func(c ansi.Color, sel colorSelector, pen *ansi.CsiSequence) {
-		if c := w.Profile.Convert(c); c != nil {
-			pen.Params = append(pen.Params, ansiColorToParams(c, sel)...)
-		}
-	}
-
 	var buf bytes.Buffer
 	var state byte
-	pen := ansi.CsiSequence{Cmd: 'm'}
 
 	parser := ansi.GetParser()
 	defer ansi.PutParser(parser)
 
 	for len(p) > 0 {
+		var style ansi.Style
 		parser.Reset()
-		seq, width, read, newState := ansi.DecodeSequence(p, state, parser)
+		seq, _, read, newState := ansi.DecodeSequence(p, state, parser)
 
-		if width == 0 && ansi.HasCsiPrefix(seq) && parser.Cmd == 'm' {
-			pen.Params = pen.Params[:0]
+		switch {
+		default:
+			// If we're not a style SGR sequence, just write the bytes.
+			if _, err := buf.Write(seq); err != nil {
+				return 0, err
+			}
 
-			for j := 0; j < parser.ParamsLen; j++ {
-				param := ansi.Param(parser.Params[j]).Param()
-				switch param {
+		case ansi.HasCsiPrefix(seq) && parser.Cmd == 'm':
+			for i := 0; i < parser.ParamsLen; i++ {
+				param := ansi.Param(parser.Params[i])
+
+				switch param := param.Param(); param {
+				default:
+					// If this is not a color attribute, just append it to the style.
+					style = append(style, strconv.Itoa(param))
 				case 30, 31, 32, 33, 34, 35, 36, 37: // 8-bit foreground color
 					if w.Profile > ANSI {
 						continue
 					}
-					convertColorAppend(ansi.BasicColor(param-30), foreground, &pen) //nolint:gosec
+					style = style.ForegroundColor(
+						w.Profile.Convert(ansi.BasicColor(param - 30))) //nolint:gosec
+				case 38: // 16 or 24-bit foreground color
+					c := readColor(&i, parser.Params)
+					if w.Profile > ANSI {
+						continue
+					}
+					style = style.ForegroundColor(w.Profile.Convert(c))
 				case 39: // default foreground color
 					if w.Profile > ANSI {
 						continue
 					}
+					style = style.DefaultForegroundColor()
 				case 40, 41, 42, 43, 44, 45, 46, 47: // 8-bit background color
 					if w.Profile > ANSI {
 						continue
 					}
-					convertColorAppend(ansi.BasicColor(param-40), background, &pen) //nolint:gosec
+					style = style.BackgroundColor(
+						w.Profile.Convert(ansi.BasicColor(param - 40))) //nolint:gosec
+				case 48: // 16 or 24-bit background color
+					c := readColor(&i, parser.Params)
+					if w.Profile > ANSI {
+						continue
+					}
+					style = style.BackgroundColor(w.Profile.Convert(c))
 				case 49: // default background color
 					if w.Profile > ANSI {
 						continue
 					}
-				case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
+					style = style.DefaultBackgroundColor()
+				case 58: // 16 or 24-bit underline color
+					c := readColor(&i, parser.Params)
 					if w.Profile > ANSI {
 						continue
 					}
-					convertColorAppend(ansi.BasicColor(param-90+8), foreground, &pen) //nolint:gosec
-				case 100, 101, 102, 103, 104, 105, 106, 107: // 8-bit bright background color
-					if w.Profile > ANSI {
-						continue
-					}
-					convertColorAppend(ansi.BasicColor(param-100+8), background, &pen) //nolint:gosec
+					style = style.UnderlineColor(w.Profile.Convert(c))
 				case 59: // default underline color
 					if w.Profile > ANSI {
 						continue
 					}
-				case 38: // 16 or 24-bit foreground color
-					fallthrough
-				case 48: // 16 or 24-bit background color
-					fallthrough
-				case 58: // 16 or 24-bit underline color
-					var sel colorSelector
-					switch param {
-					case 38:
-						sel = foreground
-					case 48:
-						sel = background
-					case 58:
-						sel = underline
-					}
-					if c := readColor(&j, parser.Params); c != nil {
-						switch c.(type) {
-						case ansi.ExtendedColor:
-							if w.Profile > ANSI256 {
-								convertColorAppend(c, sel, &pen)
-								continue
-							}
-						default:
-							if w.Profile > TrueColor {
-								convertColorAppend(c, sel, &pen)
-								continue
-							}
-						}
-						pen.Params = append(pen.Params, ansiColorToParams(c, sel)...)
+					style = style.DefaultUnderlineColor()
+				case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
+					if w.Profile > ANSI {
 						continue
 					}
-				default:
-					pen.Params = append(pen.Params, param)
+					style = style.ForegroundColor(
+						w.Profile.Convert(ansi.BasicColor(param - 90 + 8))) //nolint:gosec
+				case 100, 101, 102, 103, 104, 105, 106, 107: // 8-bit bright background color
+					if w.Profile > ANSI {
+						continue
+					}
+					style = style.BackgroundColor(
+						w.Profile.Convert(ansi.BasicColor(param - 100 + 8))) //nolint:gosec
 				}
 			}
 
-			if _, err := buf.Write(pen.Bytes()); err != nil {
-				return 0, err
-			}
-		} else {
-			if _, err := buf.Write(seq); err != nil {
+			if _, err := buf.WriteString(style.String()); err != nil {
 				return 0, err
 			}
 		}
@@ -195,55 +188,4 @@ func readColor(idxp *int, params []int) (c ansi.Color) {
 		*idxp += 2
 	}
 	return
-}
-
-type colorSelector uint8
-
-const (
-	foreground colorSelector = iota
-	background
-	underline
-)
-
-func ansiColorToParams(c ansi.Color, sel colorSelector) []int {
-	switch c := c.(type) {
-	case ansi.BasicColor:
-		offset := 30
-		if c >= ansi.BrightBlack {
-			offset = 90
-			c -= ansi.BrightBlack
-		}
-		switch sel {
-		case foreground:
-			return []int{offset + int(c)}
-		case background:
-			return []int{offset + 10 + int(c)}
-		case underline:
-			// NOTE: ANSI doesn't have underline colors, use ANSI256.
-			return []int{58, 5, int(c)}
-		}
-	case ansi.ExtendedColor:
-		switch sel {
-		case foreground:
-			return []int{38, 5, int(c)}
-		case background:
-			return []int{48, 5, int(c)}
-		case underline:
-			return []int{58, 5, int(c)}
-		}
-	default:
-		r, g, b, _ := c.RGBA()
-		r = r >> 8
-		g = g >> 8
-		b = b >> 8
-		switch sel {
-		case foreground:
-			return []int{38, 2, int(r), int(g), int(b)}
-		case background:
-			return []int{48, 2, int(r), int(g), int(b)}
-		case underline:
-			return []int{58, 2, int(r), int(g), int(b)}
-		}
-	}
-	return nil
 }
