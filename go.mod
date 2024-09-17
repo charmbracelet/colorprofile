@@ -1,6 +1,6 @@
 module github.com/charmbracelet/colorprofile
 
-go 1.23.1
+go 1.18
 
 require (
 	github.com/charmbracelet/x/ansi v0.3.2
