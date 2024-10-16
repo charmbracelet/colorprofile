@@ -90,6 +90,10 @@ We’d love to hear your thoughts on this project. Feel free to drop us a note!
 - [The Fediverse](https://mastodon.social/@charmcli)
 - [Discord](https://charm.sh/chat)
 
+## License
+
+[MIT](https://github.com/charmbracelet/bubbletea/raw/master/LICENSE)
+
 ---
 
 Part of [Charm](https://charm.sh).
