@@ -12,6 +12,7 @@ import (
 
 func main() {
 	w := colorprofile.NewWriter(os.Stdout, os.Environ())
+	w.SetHasDarkBackground(false)
 
 	// Read from stdin and write to stdout
 	bts, err := io.ReadAll(os.Stdin)

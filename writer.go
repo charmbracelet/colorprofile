@@ -29,15 +29,19 @@ func NewWriter(w io.Writer, environ []string) *Writer {
 // Writer represents a color profile writer that writes ANSI sequences to the
 // underlying writer.
 type Writer struct {
-	Forward io.Writer
-	Profile Profile
+	Forward            io.Writer
+	Profile            Profile
+	HasLightBackground bool
+}
+
+// SetHasDarkBackground sets whether the background is dark or light.
+func (w *Writer) SetHasDarkBackground(dark bool) {
+	w.HasLightBackground = !dark
 }
 
 // Write writes the given text to the underlying writer.
 func (w *Writer) Write(p []byte) (int, error) {
 	switch w.Profile {
-	case TrueColor:
-		return w.Forward.Write(p)
 	case NoTTY:
 		return io.WriteString(w.Forward, ansi.Strip(string(p)))
 	}
@@ -75,7 +79,7 @@ func (w *Writer) Write(p []byte) (int, error) {
 					style = style.ForegroundColor(
 						w.Profile.Convert(ansi.BasicColor(param - 30))) //nolint:gosec
 				case 38: // 16 or 24-bit foreground color
-					c := readColor(&i, parser.Params)
+					c := w.readColor(&i, parser.Params)
 					if w.Profile > ANSI {
 						continue
 					}
@@ -92,7 +96,7 @@ func (w *Writer) Write(p []byte) (int, error) {
 					style = style.BackgroundColor(
 						w.Profile.Convert(ansi.BasicColor(param - 40))) //nolint:gosec
 				case 48: // 16 or 24-bit background color
-					c := readColor(&i, parser.Params)
+					c := w.readColor(&i, parser.Params)
 					if w.Profile > ANSI {
 						continue
 					}
@@ -103,7 +107,7 @@ func (w *Writer) Write(p []byte) (int, error) {
 					}
 					style = style.DefaultBackgroundColor()
 				case 58: // 16 or 24-bit underline color
-					c := readColor(&i, parser.Params)
+					c := w.readColor(&i, parser.Params)
 					if w.Profile > ANSI {
 						continue
 					}
@@ -145,7 +149,7 @@ func (w *Writer) WriteString(s string) (n int, err error) {
 	return w.Write([]byte(s))
 }
 
-func readColor(idxp *int, params []int) (c ansi.Color) {
+func (w *Writer) readColor(idxp *int, params []int) (c ansi.Color) {
 	i := *idxp
 	paramsLen := len(params)
 	if i > paramsLen-1 {
@@ -170,6 +174,36 @@ func readColor(idxp *int, params []int) (c ansi.Color) {
 		}
 		c = ansi.ExtendedColor(ansi.Param(params[i+2])) //nolint:gosec
 		*idxp += 2
+	case 4: // lightDark(RGB)
+		if i > paramsLen-7 {
+			return
+		}
+		if w.HasLightBackground {
+			c = color.RGBA{
+				R: uint8(ansi.Param(params[i+2])), //nolint:gosec
+				G: uint8(ansi.Param(params[i+3])), //nolint:gosec
+				B: uint8(ansi.Param(params[i+4])), //nolint:gosec
+				A: 0xff,
+			}
+		} else {
+			c = color.RGBA{
+				R: uint8(ansi.Param(params[i+5])), //nolint:gosec
+				G: uint8(ansi.Param(params[i+6])), //nolint:gosec
+				B: uint8(ansi.Param(params[i+7])), //nolint:gosec
+				A: 0xff,
+			}
+		}
+		*idxp += 7
+	case 10: // lightDark(256 colors)
+		if i > paramsLen-3 {
+			return
+		}
+		if w.HasLightBackground {
+			c = ansi.ExtendedColor(ansi.Param(params[i+2])) //nolint:gosec
+		} else {
+			c = ansi.ExtendedColor(ansi.Param(params[i+3])) //nolint:gosec
+		}
+		*idxp += 3
 	}
 	return
 }
