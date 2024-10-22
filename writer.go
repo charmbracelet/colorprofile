@@ -152,7 +152,7 @@ func readColor(idxp *int, params []int) (c ansi.Color) {
 		return
 	}
 	// Note: we accept both main and subparams here
-	switch param := ansi.Param(params[i+1]); param {
+	switch param := ansi.Param(params[i+1]); param.Param() {
 	case 2: // RGB
 		if i > paramsLen-4 {
 			return
