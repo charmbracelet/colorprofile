@@ -9,11 +9,11 @@ import (
 )
 
 var writers = map[Profile]func(io.Writer) *Writer{
-	TrueColor: func(w io.Writer) *Writer { return &Writer{w, TrueColor} },
-	ANSI256:   func(w io.Writer) *Writer { return &Writer{w, ANSI256} },
-	ANSI:      func(w io.Writer) *Writer { return &Writer{w, ANSI} },
-	Ascii:     func(w io.Writer) *Writer { return &Writer{w, Ascii} },
-	NoTTY:     func(w io.Writer) *Writer { return &Writer{w, NoTTY} },
+	TrueColor: func(w io.Writer) *Writer { return &Writer{w, TrueColor, false} },
+	ANSI256:   func(w io.Writer) *Writer { return &Writer{w, ANSI256, false} },
+	ANSI:      func(w io.Writer) *Writer { return &Writer{w, ANSI, false} },
+	Ascii:     func(w io.Writer) *Writer { return &Writer{w, Ascii, false} },
+	NoTTY:     func(w io.Writer) *Writer { return &Writer{w, NoTTY, false} },
 }
 
 var writer_cases = []struct {
@@ -102,9 +102,17 @@ var writer_cases = []struct {
 	{
 		name:              "simple ansi 256 color bg",
 		input:             "hello \x1b[48:5:196mworld\x1b[m",
-		expectedTrueColor: "hello \x1b[48:5:196mworld\x1b[m",
+		expectedTrueColor: "hello \x1b[48;5;196mworld\x1b[m",
 		expectedANSI256:   "hello \x1b[48;5;196mworld\x1b[m",
 		expectedANSI:      "hello \x1b[101mworld\x1b[m",
+		expectedAscii:     "hello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "adaptive color",
+		input:             "hello \x1b[38;10;255;55mworld\x1b[m", // #ff8537
+		expectedTrueColor: "hello \x1b[38;5;55mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[38;5;55mworld\x1b[m",
+		expectedANSI:      "hello \x1b[94mworld\x1b[m",
 		expectedAscii:     "hello \x1b[mworld\x1b[m",
 	},
 }
@@ -145,7 +153,7 @@ func TestNewWriterPanic(t *testing.T) {
 }
 
 func BenchmarkWriter(b *testing.B) {
-	w := &Writer{&bytes.Buffer{}, ANSI}
+	w := &Writer{&bytes.Buffer{}, ANSI, false}
 	input := []byte("\x1b[1;3;59mhello\x1b[m \x1b[38;2;255;133;55mworld\x1b[m")
 	for i := 0; i < b.N; i++ {
 		_, _ = w.Write(input)
