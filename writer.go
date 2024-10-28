@@ -49,87 +49,16 @@ func (w *Writer) Write(p []byte) (int, error) {
 	defer ansi.PutParser(parser)
 
 	for len(p) > 0 {
-		var style ansi.Style
 		parser.Reset()
 		seq, _, read, newState := ansi.DecodeSequence(p, state, parser)
 
 		switch {
+		case ansi.HasCsiPrefix(seq) && parser.Cmd == 'm':
+			handleSgr(w, parser, &buf)
 		default:
 			// If we're not a style SGR sequence, just write the bytes.
-			if _, err := buf.Write(seq); err != nil {
-				return 0, err
-			}
-
-		case ansi.HasCsiPrefix(seq) && parser.Cmd == 'm':
-			for i := 0; i < parser.ParamsLen; i++ {
-				param := ansi.Param(parser.Params[i])
-
-				switch param := param.Param(); param {
-				default:
-					// If this is not a color attribute, just append it to the style.
-					style = append(style, strconv.Itoa(param))
-				case 30, 31, 32, 33, 34, 35, 36, 37: // 8-bit foreground color
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.ForegroundColor(
-						w.Profile.Convert(ansi.BasicColor(param - 30))) //nolint:gosec
-				case 38: // 16 or 24-bit foreground color
-					c := readColor(&i, parser.Params)
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.ForegroundColor(w.Profile.Convert(c))
-				case 39: // default foreground color
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.DefaultForegroundColor()
-				case 40, 41, 42, 43, 44, 45, 46, 47: // 8-bit background color
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.BackgroundColor(
-						w.Profile.Convert(ansi.BasicColor(param - 40))) //nolint:gosec
-				case 48: // 16 or 24-bit background color
-					c := readColor(&i, parser.Params)
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.BackgroundColor(w.Profile.Convert(c))
-				case 49: // default background color
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.DefaultBackgroundColor()
-				case 58: // 16 or 24-bit underline color
-					c := readColor(&i, parser.Params)
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.UnderlineColor(w.Profile.Convert(c))
-				case 59: // default underline color
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.DefaultUnderlineColor()
-				case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.ForegroundColor(
-						w.Profile.Convert(ansi.BasicColor(param - 90 + 8))) //nolint:gosec
-				case 100, 101, 102, 103, 104, 105, 106, 107: // 8-bit bright background color
-					if w.Profile > ANSI {
-						continue
-					}
-					style = style.BackgroundColor(
-						w.Profile.Convert(ansi.BasicColor(param - 100 + 8))) //nolint:gosec
-				}
-			}
-
-			if _, err := buf.WriteString(style.String()); err != nil {
-				return 0, err
+			if n, err := buf.Write(seq); err != nil {
+				return n, err
 			}
 		}
 
@@ -143,6 +72,78 @@ func (w *Writer) Write(p []byte) (int, error) {
 // WriteString writes the given text to the underlying writer.
 func (w *Writer) WriteString(s string) (n int, err error) {
 	return w.Write([]byte(s))
+}
+
+func handleSgr(w *Writer, parser *ansi.Parser, buf *bytes.Buffer) {
+	var style ansi.Style
+	for i := 0; i < parser.ParamsLen; i++ {
+		param := ansi.Param(parser.Params[i])
+
+		switch param := param.Param(); param {
+		default:
+			// If this is not a color attribute, just append it to the style.
+			style = append(style, strconv.Itoa(param))
+		case 30, 31, 32, 33, 34, 35, 36, 37: // 8-bit foreground color
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.ForegroundColor(
+				w.Profile.Convert(ansi.BasicColor(param - 30))) //nolint:gosec
+		case 38: // 16 or 24-bit foreground color
+			c := readColor(&i, parser.Params)
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.ForegroundColor(w.Profile.Convert(c))
+		case 39: // default foreground color
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.DefaultForegroundColor()
+		case 40, 41, 42, 43, 44, 45, 46, 47: // 8-bit background color
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.BackgroundColor(
+				w.Profile.Convert(ansi.BasicColor(param - 40))) //nolint:gosec
+		case 48: // 16 or 24-bit background color
+			c := readColor(&i, parser.Params)
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.BackgroundColor(w.Profile.Convert(c))
+		case 49: // default background color
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.DefaultBackgroundColor()
+		case 58: // 16 or 24-bit underline color
+			c := readColor(&i, parser.Params)
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.UnderlineColor(w.Profile.Convert(c))
+		case 59: // default underline color
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.DefaultUnderlineColor()
+		case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.ForegroundColor(
+				w.Profile.Convert(ansi.BasicColor(param - 90 + 8))) //nolint:gosec
+		case 100, 101, 102, 103, 104, 105, 106, 107: // 8-bit bright background color
+			if w.Profile > ANSI {
+				continue
+			}
+			style = style.BackgroundColor(
+				w.Profile.Convert(ansi.BasicColor(param - 100 + 8))) //nolint:gosec
+		}
+	}
+
+	_, _ = buf.WriteString(style.String())
 }
 
 func readColor(idxp *int, params []int) (c ansi.Color) {
