@@ -159,9 +159,9 @@ func readColor(idxp *int, params []int) (c ansi.Color) {
 			return
 		}
 		c = color.RGBA{
-			R: uint8(ansi.Param(params[i+2])), //nolint:gosec
-			G: uint8(ansi.Param(params[i+3])), //nolint:gosec
-			B: uint8(ansi.Param(params[i+4])), //nolint:gosec
+			R: uint8(ansi.Param(params[i+2]).Param()), //nolint:gosec
+			G: uint8(ansi.Param(params[i+3]).Param()), //nolint:gosec
+			B: uint8(ansi.Param(params[i+4]).Param()), //nolint:gosec
 			A: 0xff,
 		}
 		*idxp += 4
@@ -169,7 +169,7 @@ func readColor(idxp *int, params []int) (c ansi.Color) {
 		if i > paramsLen-2 {
 			return
 		}
-		c = ansi.ExtendedColor(ansi.Param(params[i+2])) //nolint:gosec
+		c = ansi.ExtendedColor(ansi.Param(params[i+2]).Param()) //nolint:gosec
 		*idxp += 2
 	}
 	return
