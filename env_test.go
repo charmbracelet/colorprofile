@@ -137,6 +137,13 @@ var cases = []struct {
 		},
 		expected: Ascii,
 	},
+	{
+		name: "Windows Terminal",
+		environ: []string{
+			"WT_SESSION=1",
+		},
+		expected: TrueColor,
+	},
 }
 
 func TestEnvColorProfile(t *testing.T) {

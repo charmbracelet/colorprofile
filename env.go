@@ -122,6 +122,12 @@ func envColorProfile(env map[string]string) (p Profile) {
 		return
 	}
 
+	if len(env["WT_SESSION"]) > 0 {
+		// Windows Terminal supports TrueColor
+		p = TrueColor
+		return
+	}
+
 	term := strings.ToLower(env["TERM"])
 	switch term {
 	case "", "dumb":
