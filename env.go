@@ -116,10 +116,19 @@ func colorTerm(env map[string]string) bool {
 
 // envColorProfile returns infers the color profile from the environment.
 func envColorProfile(env map[string]string) (p Profile) {
-	p = Ascii // Default to Ascii
-	if isCloudShell, _ := strconv.ParseBool(env["GOOGLE_CLOUD_SHELL"]); isCloudShell {
+	term := strings.ToLower(env["TERM"])
+	switch term {
+	case "", "dumb":
+		p = NoTTY
+	case "alacritty", "contour", "wezterm", "xterm-ghostty", "xterm-kitty":
 		p = TrueColor
 		return
+	case "linux":
+		if p > ANSI {
+			p = ANSI
+		}
+	default:
+		p = Ascii // Default to Ascii
 	}
 
 	if len(env["WT_SESSION"]) > 0 {
@@ -128,25 +137,14 @@ func envColorProfile(env map[string]string) (p Profile) {
 		return
 	}
 
-	term := strings.ToLower(env["TERM"])
-	switch term {
-	case "", "dumb":
-		p = NoTTY
+	if isCloudShell, _ := strconv.ParseBool(env["GOOGLE_CLOUD_SHELL"]); isCloudShell {
+		p = TrueColor
+		return
 	}
 
 	if colorTerm(env) {
 		p = TrueColor
 		return
-	}
-
-	switch term {
-	case "alacritty", "contour", "wezterm", "xterm-ghostty", "xterm-kitty":
-		p = TrueColor
-		return
-	case "linux":
-		if p > ANSI {
-			p = ANSI
-		}
 	}
 
 	if strings.Contains(term, "256color") && p > ANSI256 {
