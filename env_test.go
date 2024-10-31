@@ -150,7 +150,14 @@ var cases = []struct {
 		environ: []string{
 			"WT_SESSION=1",
 		},
-		expected: TrueColor,
+		expected: func() Profile {
+			if runtime.GOOS == "windows" {
+				// Windows Terminal supports TrueColor
+				return TrueColor
+			} else {
+				return NoTTY
+			}
+		}(),
 	},
 }
 
