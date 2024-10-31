@@ -1,6 +1,7 @@
 package colorprofile
 
 import (
+	"runtime"
 	"testing"
 )
 
@@ -10,9 +11,16 @@ var cases = []struct {
 	expected Profile
 }{
 	{
-		name:     "empty",
-		environ:  []string{},
-		expected: NoTTY,
+		name:    "empty",
+		environ: []string{},
+		expected: func() Profile {
+			if runtime.GOOS == "windows" {
+				p, _ := windowsColorProfile(map[string]string{})
+				return p
+			} else {
+				return NoTTY
+			}
+		}(),
 	},
 	{
 		name:     "no tty",

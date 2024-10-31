@@ -2,6 +2,7 @@ package colorprofile
 
 import (
 	"io"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -116,7 +117,8 @@ func colorTerm(env map[string]string) bool {
 
 // envColorProfile returns infers the color profile from the environment.
 func envColorProfile(env map[string]string) (p Profile) {
-	term := strings.ToLower(env["TERM"])
+	term, ok := env["TERM"]
+	term = strings.ToLower(term)
 	switch term {
 	case "", "dumb":
 		p = NoTTY
@@ -131,10 +133,12 @@ func envColorProfile(env map[string]string) (p Profile) {
 		p = Ascii // Default to Ascii
 	}
 
-	if len(env["WT_SESSION"]) > 0 {
-		// Windows Terminal supports TrueColor
-		p = TrueColor
-		return
+	if !ok && runtime.GOOS == "windows" {
+		// Use Windows API to detect color profile
+		wcp, _ := windowsColorProfile(env)
+		if wcp < p {
+			p = wcp
+		}
 	}
 
 	if isCloudShell, _ := strconv.ParseBool(env["GOOGLE_CLOUD_SHELL"]); isCloudShell {
