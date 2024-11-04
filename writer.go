@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/charmbracelet/x/ansi/parser"
 )
 
 // NewWriter creates a new color profile writer that downgrades color sequences
@@ -86,10 +85,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 		param := ansi.Param(p.Params[i])
 
 		switch param := param.Param(); param {
-		case parser.MissingParam:
-			if w.Profile > Ascii {
-				continue
-			}
+		case -1:
 			// SGR default parameter is 0. We use an empty string to reduce the
 			// number of bytes written to the buffer.
 			style = append(style, "")
