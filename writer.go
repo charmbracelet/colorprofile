@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/ansi/parser"
 )
 
 // NewWriter creates a new color profile writer that downgrades color sequences
@@ -74,15 +75,19 @@ func (w *Writer) WriteString(s string) (n int, err error) {
 	return w.Write([]byte(s))
 }
 
-func handleSgr(w *Writer, parser *ansi.Parser, buf *bytes.Buffer) {
+func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 	var style ansi.Style
-	for i := 0; i < parser.ParamsLen; i++ {
-		param := ansi.Param(parser.Params[i])
+	for i := 0; i < p.ParamsLen; i++ {
+		param := ansi.Param(p.Params[i])
 
 		switch param := param.Param(); param {
-		default:
-			// If this is not a color attribute, just append it to the style.
-			style = append(style, strconv.Itoa(param))
+		case parser.MissingParam:
+			if w.Profile > Ascii {
+				continue
+			}
+			// SGR default parameter is 0. We use an empty string to reduce the
+			// number of bytes written to the buffer.
+			style = append(style, "")
 		case 30, 31, 32, 33, 34, 35, 36, 37: // 8-bit foreground color
 			if w.Profile > ANSI {
 				continue
@@ -90,7 +95,7 @@ func handleSgr(w *Writer, parser *ansi.Parser, buf *bytes.Buffer) {
 			style = style.ForegroundColor(
 				w.Profile.Convert(ansi.BasicColor(param - 30))) //nolint:gosec
 		case 38: // 16 or 24-bit foreground color
-			c := readColor(&i, parser.Params)
+			c := readColor(&i, p.Params)
 			if w.Profile > ANSI {
 				continue
 			}
@@ -107,7 +112,7 @@ func handleSgr(w *Writer, parser *ansi.Parser, buf *bytes.Buffer) {
 			style = style.BackgroundColor(
 				w.Profile.Convert(ansi.BasicColor(param - 40))) //nolint:gosec
 		case 48: // 16 or 24-bit background color
-			c := readColor(&i, parser.Params)
+			c := readColor(&i, p.Params)
 			if w.Profile > ANSI {
 				continue
 			}
@@ -118,7 +123,7 @@ func handleSgr(w *Writer, parser *ansi.Parser, buf *bytes.Buffer) {
 			}
 			style = style.DefaultBackgroundColor()
 		case 58: // 16 or 24-bit underline color
-			c := readColor(&i, parser.Params)
+			c := readColor(&i, p.Params)
 			if w.Profile > ANSI {
 				continue
 			}
@@ -140,6 +145,9 @@ func handleSgr(w *Writer, parser *ansi.Parser, buf *bytes.Buffer) {
 			}
 			style = style.BackgroundColor(
 				w.Profile.Convert(ansi.BasicColor(param - 100 + 8))) //nolint:gosec
+		default:
+			// If this is not a color attribute, just append it to the style.
+			style = append(style, strconv.Itoa(param))
 		}
 	}
 

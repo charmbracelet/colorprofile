@@ -107,6 +107,14 @@ var writer_cases = []struct {
 		expectedANSI:      "hello \x1b[101mworld\x1b[m",
 		expectedAscii:     "hello \x1b[mworld\x1b[m",
 	},
+	{
+		name:              "simple missing param",
+		input:             "\x1b[31mhello \x1b[;1mworld",
+		expectedTrueColor: "\x1b[31mhello \x1b[;1mworld",
+		expectedANSI256:   "\x1b[31mhello \x1b[;1mworld",
+		expectedANSI:      "\x1b[31mhello \x1b[;1mworld",
+		expectedAscii:     "\x1b[mhello \x1b[;1mworld",
+	},
 }
 
 func TestWriter(t *testing.T) {
