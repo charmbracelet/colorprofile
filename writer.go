@@ -41,8 +41,13 @@ func (w *Writer) Write(p []byte) (int, error) {
 		return w.Forward.Write(p)
 	case NoTTY:
 		return io.WriteString(w.Forward, ansi.Strip(string(p)))
+	default:
+		return w.downsample(p)
 	}
+}
 
+// downsample downgrades the given text to the appropriate color profile.
+func (w *Writer) downsample(p []byte) (int, error) {
 	var buf bytes.Buffer
 	var state byte
 

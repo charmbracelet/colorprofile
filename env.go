@@ -163,7 +163,8 @@ func envColorProfile(env map[string]string) (p Profile) {
 		p = ANSI
 	}
 
-	if ti, err := terminfo.Load(term); err == nil {
+	ti, err := terminfo.Load(term)
+	if err == nil {
 		extbools := ti.ExtBoolCapsShort()
 		if _, ok := extbools["RGB"]; ok {
 			p = TrueColor
