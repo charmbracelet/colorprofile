@@ -126,9 +126,9 @@ func envColorProfile(env map[string]string) (p Profile) {
 		p = TrueColor
 		return
 	case "linux":
-		if p > ANSI {
-			p = ANSI
-		}
+		p = ANSI
+	case "screen":
+		p = ANSI256
 	default:
 		p = Ascii // Default to Ascii
 	}
@@ -146,7 +146,9 @@ func envColorProfile(env map[string]string) (p Profile) {
 		return
 	}
 
-	if colorTerm(env) {
+	// GNU Screen doesn't support TrueColor
+	// Tmux doesn't support $COLORTERM
+	if colorTerm(env) && !strings.HasPrefix(term, "screen") && !strings.HasPrefix(term, "tmux") {
 		p = TrueColor
 		return
 	}

@@ -159,6 +159,37 @@ var cases = []struct {
 			}
 		}(),
 	},
+	{
+		name: "screen default",
+		environ: []string{
+			"TERM=screen",
+		},
+		expected: ANSI256,
+	},
+	{
+		name: "screen colorterm",
+		environ: []string{
+			"TERM=screen",
+			"COLORTERM=truecolor",
+		},
+		expected: ANSI256,
+	},
+	{
+		name: "tmux colorterm",
+		environ: []string{
+			"TERM=tmux",
+			"COLORTERM=truecolor",
+		},
+		// TODO: Should this be ANSI256?
+		expected: Ascii,
+	},
+	{
+		name: "tmux 256color",
+		environ: []string{
+			"TERM=tmux-256color",
+		},
+		expected: ANSI256,
+	},
 }
 
 func TestEnvColorProfile(t *testing.T) {
