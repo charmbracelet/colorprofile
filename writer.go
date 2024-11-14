@@ -82,10 +82,10 @@ func (w *Writer) WriteString(s string) (n int, err error) {
 func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 	var style ansi.Style
 	for i := 0; i < p.ParamsLen; i++ {
-		param := ansi.Param(p.Params[i])
+		param := ansi.Parameter(p.Params[i])
 
-		switch param := param.Param(); param {
-		case -1:
+		switch param := param.Param(0); param {
+		case 0:
 			// SGR default parameter is 0. We use an empty string to reduce the
 			// number of bytes written to the buffer.
 			style = append(style, "")
@@ -162,15 +162,15 @@ func readColor(idxp *int, params []int) (c ansi.Color) {
 		return
 	}
 	// Note: we accept both main and subparams here
-	switch param := ansi.Param(params[i+1]); param.Param() {
+	switch param := ansi.Parameter(params[i+1]); param.Param(0) {
 	case 2: // RGB
 		if i > paramsLen-4 {
 			return
 		}
 		c = color.RGBA{
-			R: uint8(ansi.Param(params[i+2]).Param()), //nolint:gosec
-			G: uint8(ansi.Param(params[i+3]).Param()), //nolint:gosec
-			B: uint8(ansi.Param(params[i+4]).Param()), //nolint:gosec
+			R: uint8(ansi.Parameter(params[i+2]).Param(0)), //nolint:gosec
+			G: uint8(ansi.Parameter(params[i+3]).Param(0)), //nolint:gosec
+			B: uint8(ansi.Parameter(params[i+4]).Param(0)), //nolint:gosec
 			A: 0xff,
 		}
 		*idxp += 4
@@ -178,7 +178,7 @@ func readColor(idxp *int, params []int) (c ansi.Color) {
 		if i > paramsLen-2 {
 			return
 		}
-		c = ansi.ExtendedColor(ansi.Param(params[i+2]).Param()) //nolint:gosec
+		c = ansi.ExtendedColor(ansi.Parameter(params[i+2]).Param(0)) //nolint:gosec
 		*idxp += 2
 	}
 	return
