@@ -96,7 +96,7 @@ var cases = []struct {
 		environ: []string{
 			"TERM=xterm",
 		},
-		expected: Ascii,
+		expected: ANSI,
 	},
 	{
 		name: "xterm, NO_COLOR=1",
