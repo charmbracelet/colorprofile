@@ -122,10 +122,18 @@ func envColorProfile(env map[string]string) (p Profile) {
 	switch term {
 	case "", "dumb":
 		p = NoTTY
-	case "alacritty", "contour", "wezterm", "xterm-ghostty", "xterm-kitty":
+	case "alacritty",
+		"contour",
+		"foot",
+		"ghostty",
+		"kitty",
+		"rio",
+		"wezterm",
+		"xterm-ghostty",
+		"xterm-kitty":
 		p = TrueColor
 		return
-	case "linux":
+	case "xterm", "linux":
 		p = ANSI
 	case "screen":
 		p = ANSI256
@@ -183,8 +191,6 @@ func envColorProfile(env map[string]string) (p Profile) {
 				return
 			} else if colors >= 0x100 && p > ANSI256 {
 				p = ANSI256
-			} else if colors >= 0x10 && p > ANSI {
-				p = ANSI
 			}
 		}
 	}
