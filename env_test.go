@@ -50,7 +50,14 @@ var cases = []struct {
 			"TERM=dumb",
 			"CLICOLOR_FORCE=1",
 		},
-		expected: ANSI,
+		expected: func() Profile {
+			if runtime.GOOS == "windows" {
+				// Windows Terminal supports TrueColor
+				return TrueColor
+			} else {
+				return ANSI
+			}
+		}(),
 	},
 	{
 		name: "dumb term, CLICOLOR=1",
@@ -180,8 +187,7 @@ var cases = []struct {
 			"TERM=tmux",
 			"COLORTERM=truecolor",
 		},
-		// TODO: Should this be ANSI256?
-		expected: Ascii,
+		expected: ANSI256,
 	},
 	{
 		name: "tmux 256color",
