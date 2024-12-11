@@ -201,6 +201,8 @@ func envColorProfile(env map[string]string) (p Profile) {
 				return
 			} else if colors >= 0x100 && p > ANSI256 {
 				p = ANSI256
+			} else if colors >= 0x10 && p > ANSI {
+				p = ANSI
 			}
 		}
 	}
