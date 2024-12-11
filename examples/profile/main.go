@@ -66,6 +66,10 @@ func main() {
 }
 
 func colorToHex(c color.Color) string {
+	if c == nil {
+		return ""
+	}
+
 	r, g, b, _ := c.RGBA()
 	return fmt.Sprintf("#%02x%02x%02x", r>>8, g>>8, b>>8)
 }
