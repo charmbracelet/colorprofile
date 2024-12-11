@@ -130,9 +130,7 @@ func envColorProfile(env map[string]string) (p Profile) {
 		"kitty",
 		"rio",
 		"st",
-		"wezterm",
-		"xterm-ghostty",
-		"xterm-kitty":
+		"wezterm":
 		return TrueColor
 	case "xterm":
 		for _, t := range []string{
