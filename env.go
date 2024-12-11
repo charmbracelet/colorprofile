@@ -119,12 +119,30 @@ func colorTerm(env map[string]string) bool {
 func envColorProfile(env map[string]string) (p Profile) {
 	term, ok := env["TERM"]
 	term = strings.ToLower(term)
-	switch term {
+	parts := strings.Split(term, "-")
+	switch parts[0] {
 	case "", "dumb":
 		p = NoTTY
-	case "alacritty", "contour", "wezterm", "xterm-ghostty", "xterm-kitty":
-		p = TrueColor
-		return
+	case "alacritty",
+		"contour",
+		"foot",
+		"ghostty",
+		"kitty",
+		"rio",
+		"st",
+		"wezterm":
+		return TrueColor
+	case "xterm":
+		for _, t := range []string{
+			// These terminals can be defined as xterm-TERMNAME
+			"ghostty",
+			"kitty",
+		} {
+			if strings.Contains(term, "-"+t) {
+				return TrueColor
+			}
+		}
+		fallthrough
 	case "linux":
 		p = ANSI
 	case "screen":
