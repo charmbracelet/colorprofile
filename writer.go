@@ -97,7 +97,10 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			style = style.ForegroundColor(
 				w.Profile.Convert(ansi.BasicColor(param - 30))) //nolint:gosec
 		case 38: // 16 or 24-bit foreground color
-			c := readColor(&i, params)
+			var c color.Color
+			if n := ansi.ReadStyleColor(params, &c); n > 0 {
+				i += n - 1
+			}
 			if w.Profile > ANSI {
 				continue
 			}
@@ -114,7 +117,10 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			style = style.BackgroundColor(
 				w.Profile.Convert(ansi.BasicColor(param - 40))) //nolint:gosec
 		case 48: // 16 or 24-bit background color
-			c := readColor(&i, params)
+			var c color.Color
+			if n := ansi.ReadStyleColor(params, &c); n > 0 {
+				i += n - 1
+			}
 			if w.Profile > ANSI {
 				continue
 			}
@@ -125,7 +131,10 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			}
 			style = style.DefaultBackgroundColor()
 		case 58: // 16 or 24-bit underline color
-			c := readColor(&i, params)
+			var c color.Color
+			if n := ansi.ReadStyleColor(params, &c); n > 0 {
+				i += n - 1
+			}
 			if w.Profile > ANSI {
 				continue
 			}
@@ -154,33 +163,4 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 	}
 
 	_, _ = buf.WriteString(style.String())
-}
-
-func readColor(idxp *int, params []ansi.Param) (c ansi.Color) {
-	i := *idxp
-	paramsLen := len(params)
-	if i > paramsLen-1 {
-		return
-	}
-	// Note: we accept both main and subparams here
-	switch param := params[i+1]; param.Param(0) {
-	case 2: // RGB
-		if i > paramsLen-4 {
-			return
-		}
-		c = color.RGBA{
-			R: uint8(params[i+2].Param(0)), //nolint:gosec
-			G: uint8(params[i+3].Param(0)), //nolint:gosec
-			B: uint8(params[i+4].Param(0)), //nolint:gosec
-			A: 0xff,
-		}
-		*idxp += 4
-	case 5: // 256 colors
-		if i > paramsLen-2 {
-			return
-		}
-		c = ansi.ExtendedColor(params[i+2].Param(0)) //nolint:gosec
-		*idxp += 2
-	}
-	return
 }

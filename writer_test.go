@@ -100,6 +100,14 @@ var writer_cases = []struct {
 		expectedAscii:     "hello \x1b[mworld\x1b[m",
 	},
 	{
+		name:              "itu true color bg",
+		input:             "hello \x1b[38:2::255:133:55mworld\x1b[m", // #ff8537
+		expectedTrueColor: "hello \x1b[38:2::255:133:55mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[38;5;209mworld\x1b[m",
+		expectedANSI:      "hello \x1b[91mworld\x1b[m",
+		expectedAscii:     "hello \x1b[mworld\x1b[m",
+	},
+	{
 		name:              "simple ansi 256 color bg",
 		input:             "hello \x1b[48:5:196mworld\x1b[m",
 		expectedTrueColor: "hello \x1b[48:5:196mworld\x1b[m",
