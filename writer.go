@@ -58,7 +58,7 @@ func (w *Writer) downsample(p []byte) (int, error) {
 		seq, _, read, newState := ansi.DecodeSequence(p, state, parser)
 
 		switch {
-		case ansi.HasCsiPrefix(seq) && parser.Cmd() == 'm':
+		case ansi.HasCsiPrefix(seq) && parser.Command() == 'm':
 			handleSgr(w, parser, &buf)
 		default:
 			// If we're not a style SGR sequence, just write the bytes.
@@ -156,7 +156,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 	_, _ = buf.WriteString(style.String())
 }
 
-func readColor(idxp *int, params []ansi.Parameter) (c ansi.Color) {
+func readColor(idxp *int, params []ansi.Param) (c ansi.Color) {
 	i := *idxp
 	paramsLen := len(params)
 	if i > paramsLen-1 {
