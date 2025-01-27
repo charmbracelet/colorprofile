@@ -80,17 +80,17 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 	}
 
 	if envNoColor(env) && isatty {
-		if p < Ascii {
+		if p > Ascii {
 			p = Ascii
 		}
 		return
 	}
 
 	if cliColorForced(env) {
-		if p > ANSI {
+		if p < ANSI {
 			p = ANSI
 		}
-		if envp < p {
+		if envp > p {
 			p = envp
 		}
 
@@ -98,7 +98,7 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 	}
 
 	if cliColor(env) {
-		if isatty && !isDumb && p > ANSI {
+		if isatty && !isDumb && p < ANSI {
 			p = ANSI
 		}
 	}
@@ -165,7 +165,7 @@ func envColorProfile(env environ) (p Profile) {
 			}
 		}
 	case "tmux", "screen":
-		if p > ANSI256 {
+		if p < ANSI256 {
 			p = ANSI256
 		}
 	}
@@ -180,7 +180,7 @@ func envColorProfile(env environ) (p Profile) {
 		return TrueColor
 	}
 
-	if strings.HasSuffix(term, "256color") && p > ANSI256 {
+	if strings.HasSuffix(term, "256color") && p < ANSI256 {
 		p = ANSI256
 	}
 
