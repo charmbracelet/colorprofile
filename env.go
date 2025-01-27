@@ -27,22 +27,27 @@ import (
 //     colors but not text decoration, i.e. bold, italic, faint, etc.
 //
 // See https://no-color.org/ and https://bixense.com/clicolors/ for more information.
-func Detect(output io.Writer, env []string) (p Profile) {
+func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
 	isatty := ok && term.IsTerminal(out.Fd())
 	environ := newEnviron(env)
 	term := environ.get("TERM")
+	isDumb := term == "dumb"
 	envp := colorProfile(isatty, environ)
 	if envp == TrueColor || envNoColor(environ) {
 		// We already know we have TrueColor, or NO_COLOR is set.
 		return envp
 	}
 
-	tip := Terminfo(term)
-	tmuxp := tmux(environ)
+	if isatty && !isDumb {
+		tip := Terminfo(term)
+		tmuxp := tmux(environ)
 
-	// Color profile is the minimum of env, terminfo, and tmux.
-	return min(envp, min(tip, tmuxp))
+		// Color profile is the minimum of env, terminfo, and tmux.
+		return min(envp, min(tip, tmuxp))
+	}
+
+	return envp
 }
 
 // Env returns the color profile based on the terminal environment variables.
@@ -64,17 +69,17 @@ func Env(env []string) (p Profile) {
 }
 
 func colorProfile(isatty bool, env environ) (p Profile) {
-	envp := envColorProfile(env)
-	p = envp
 	isDumb := env.get("TERM") == "dumb"
-
-	// Check if the output is a terminal.
-	// Treat dumb terminals as NoTTY
+	envp := envColorProfile(env)
 	if !isatty || isDumb {
+		// Check if the output is a terminal.
+		// Treat dumb terminals as NoTTY
 		p = NoTTY
+	} else {
+		p = envp
 	}
 
-	if envNoColor(env) {
+	if envNoColor(env) && isatty {
 		if p < Ascii {
 			p = Ascii
 		}

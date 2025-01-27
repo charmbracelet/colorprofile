@@ -3,6 +3,7 @@ package colorprofile
 import (
 	"bytes"
 	"io"
+	"os"
 	"testing"
 
 	"github.com/charmbracelet/x/ansi"
@@ -158,6 +159,13 @@ func TestWriter(t *testing.T) {
 
 func TestNewWriterPanic(t *testing.T) {
 	_ = NewWriter(io.Discard, []string{"TERM=dumb"})
+}
+
+func TestNewWriterOsEnviron(t *testing.T) {
+	w := NewWriter(io.Discard, os.Environ())
+	if w.Profile != NoTTY {
+		t.Errorf("expected NoTTY, got %v", w.Profile)
+	}
 }
 
 func BenchmarkWriter(b *testing.B) {
