@@ -12,16 +12,16 @@ import (
 type Profile byte
 
 const (
-	// TrueColor, 24-bit color profile.
-	TrueColor Profile = iota
-	// ANSI256, 8-bit color profile.
-	ANSI256
-	// ANSI, 4-bit color profile.
-	ANSI
+	// NoTTY, not a terminal profile.
+	NoTTY Profile = iota
 	// Ascii, uncolored profile.
 	Ascii //nolint:revive
-	// NoTTY, not a terminal profile.
-	NoTTY
+	// ANSI, 4-bit color profile.
+	ANSI
+	// ANSI256, 8-bit color profile.
+	ANSI256
+	// TrueColor, 24-bit color profile.
+	TrueColor
 )
 
 // String returns the string representation of a Profile.
@@ -43,7 +43,7 @@ func (p Profile) String() string {
 
 // Convert transforms a given Color to a Color supported within the Profile.
 func (p Profile) Convert(c color.Color) color.Color {
-	if p >= Ascii {
+	if p <= Ascii {
 		return nil
 	}
 

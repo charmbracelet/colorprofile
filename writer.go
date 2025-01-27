@@ -91,7 +91,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			// number of bytes written to the buffer.
 			style = append(style, "")
 		case 30, 31, 32, 33, 34, 35, 36, 37: // 8-bit foreground color
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.ForegroundColor(
@@ -101,17 +101,17 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if n := ansi.ReadStyleColor(params, &c); n > 0 {
 				i += n - 1
 			}
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.ForegroundColor(w.Profile.Convert(c))
 		case 39: // default foreground color
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.DefaultForegroundColor()
 		case 40, 41, 42, 43, 44, 45, 46, 47: // 8-bit background color
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.BackgroundColor(
@@ -121,12 +121,12 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if n := ansi.ReadStyleColor(params, &c); n > 0 {
 				i += n - 1
 			}
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.BackgroundColor(w.Profile.Convert(c))
 		case 49: // default background color
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.DefaultBackgroundColor()
@@ -135,23 +135,23 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if n := ansi.ReadStyleColor(params, &c); n > 0 {
 				i += n - 1
 			}
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.UnderlineColor(w.Profile.Convert(c))
 		case 59: // default underline color
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.DefaultUnderlineColor()
 		case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.ForegroundColor(
 				w.Profile.Convert(ansi.BasicColor(param - 90 + 8))) //nolint:gosec
 		case 100, 101, 102, 103, 104, 105, 106, 107: // 8-bit bright background color
-			if w.Profile > ANSI {
+			if w.Profile < ANSI {
 				continue
 			}
 			style = style.BackgroundColor(
