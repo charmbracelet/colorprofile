@@ -68,3 +68,36 @@ func TestHexTo256(t *testing.T) {
 		})
 	}
 }
+
+func TestDetectionByEnvironment(t *testing.T) {
+	testCases := map[string]struct {
+		environ  []string
+		expected Profile
+	}{
+		"TERM is set to dumb": {
+			environ:  []string{"TERM=dumb"},
+			expected: NoTTY,
+		},
+		"TERM set to xterm": {
+			environ:  []string{"TERM=xterm"},
+			expected: ANSI,
+		},
+		"TERM is set to rio": {
+			environ:  []string{"TERM=rio"},
+			expected: TrueColor,
+		},
+		"TERM set to xterm-256color": {
+			environ:  []string{"TERM=xterm-256color"},
+			expected: ANSI256,
+		},
+	}
+
+	for testName, testCase := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			profile := Env(testCase.environ)
+			if profile != testCase.expected {
+				t.Errorf("Expected profile to be %s, but instead received %s", testCase.expected, profile)
+			}
+		})
+	}
+}
