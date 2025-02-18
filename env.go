@@ -43,8 +43,8 @@ func Detect(output io.Writer, env []string) Profile {
 		tip := Terminfo(term)
 		tmuxp := tmux(environ)
 
-		// Color profile is the minimum of env, terminfo, and tmux.
-		return min(envp, min(tip, tmuxp))
+		// Color profile is the maximum of env, terminfo, and tmux.
+		return max(envp, max(tip, tmuxp))
 	}
 
 	return envp
@@ -279,8 +279,8 @@ func (e environ) get(key string) string {
 	return v
 }
 
-func min[T ~byte | ~int](a, b T) T {
-	if a < b {
+func max[T ~byte | ~int](a, b T) T {
+	if a > b {
 		return a
 	}
 	return b
