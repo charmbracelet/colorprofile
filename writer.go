@@ -98,7 +98,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 				w.Profile.Convert(ansi.BasicColor(param - 30))) //nolint:gosec
 		case 38: // 16 or 24-bit foreground color
 			var c color.Color
-			if n := ansi.ReadStyleColor(params, &c); n > 0 {
+			if n := ansi.ReadStyleColor(params[i:], &c); n > 0 {
 				i += n - 1
 			}
 			if w.Profile < ANSI {
@@ -118,7 +118,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 				w.Profile.Convert(ansi.BasicColor(param - 40))) //nolint:gosec
 		case 48: // 16 or 24-bit background color
 			var c color.Color
-			if n := ansi.ReadStyleColor(params, &c); n > 0 {
+			if n := ansi.ReadStyleColor(params[i:], &c); n > 0 {
 				i += n - 1
 			}
 			if w.Profile < ANSI {
@@ -132,7 +132,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			style = style.DefaultBackgroundColor()
 		case 58: // 16 or 24-bit underline color
 			var c color.Color
-			if n := ansi.ReadStyleColor(params, &c); n > 0 {
+			if n := ansi.ReadStyleColor(params[i:], &c); n > 0 {
 				i += n - 1
 			}
 			if w.Profile < ANSI {

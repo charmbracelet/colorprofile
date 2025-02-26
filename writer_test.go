@@ -124,6 +124,14 @@ var writer_cases = []struct {
 		expectedANSI:      "\x1b[31mhello \x1b[;1mworld",
 		expectedAscii:     "\x1b[mhello \x1b[;1mworld",
 	},
+	{
+		name:              "color with other attributes",
+		input:             "\x1b[1;38;5;204mhello \x1b[38;5;204mworld\x1b[m",
+		expectedTrueColor: "\x1b[1;38;5;204mhello \x1b[38;5;204mworld\x1b[m",
+		expectedANSI256:   "\x1b[1;38;5;204mhello \x1b[38;5;204mworld\x1b[m",
+		expectedANSI:      "\x1b[1;91mhello \x1b[91mworld\x1b[m",
+		expectedAscii:     "\x1b[1mhello \x1b[mworld\x1b[m",
+	},
 }
 
 func TestWriter(t *testing.T) {
