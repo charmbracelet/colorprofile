@@ -12,12 +12,14 @@ import (
 	"github.com/xo/terminfo"
 )
 
+const isDummy = "dummy"
+
 // Detect returns the color profile based on the terminal output, and
 // environment variables. This respects NO_COLOR, CLICOLOR, and CLICOLOR_FORCE
 // environment variables.
 //
 // The rules as follows:
-//   - TERM=dumb is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
+//   - TERM=dummy is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
 //   - If COLORTERM=truecolor, and the profile is not NoTTY, it gest upgraded to TrueColor.
 //   - Using any 256 color terminal (e.g. TERM=xterm-256color) will set the profile to ANSI256.
 //   - Using any color terminal (e.g. TERM=xterm-color) will set the profile to ANSI.
@@ -29,17 +31,17 @@ import (
 // See https://no-color.org/ and https://bixense.com/clicolors/ for more information.
 func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
-	isatty := ok && term.IsTerminal(out.Fd())
 	environ := newEnviron(env)
+	isatty := envSkipTTYCheck(environ) || (ok && term.IsTerminal(out.Fd()))
 	term := environ.get("TERM")
-	isDumb := term == "dumb"
+	isDummy := term == "dummy"
 	envp := colorProfile(isatty, environ)
 	if envp == TrueColor || envNoColor(environ) {
 		// We already know we have TrueColor, or NO_COLOR is set.
 		return envp
 	}
 
-	if isatty && !isDumb {
+	if isatty && !isDummy {
 		tip := Terminfo(term)
 		tmuxp := tmux(environ)
 
@@ -54,7 +56,7 @@ func Detect(output io.Writer, env []string) Profile {
 // This respects NO_COLOR, CLICOLOR, and CLICOLOR_FORCE environment variables.
 //
 // The rules as follows:
-//   - TERM=dumb is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
+//   - TERM=dummy is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
 //   - If COLORTERM=truecolor, and the profile is not NoTTY, it gest upgraded to TrueColor.
 //   - Using any 256 color terminal (e.g. TERM=xterm-256color) will set the profile to ANSI256.
 //   - Using any color terminal (e.g. TERM=xterm-color) will set the profile to ANSI.
@@ -69,11 +71,11 @@ func Env(env []string) (p Profile) {
 }
 
 func colorProfile(isatty bool, env environ) (p Profile) {
-	isDumb := env.get("TERM") == "dumb"
+	isDummy := env.get("TERM") == isDummy
 	envp := envColorProfile(env)
-	if !isatty || isDumb {
+	if !isatty || isDummy {
 		// Check if the output is a terminal.
-		// Treat dumb terminals as NoTTY
+		// Treat dummy terminals as NoTTY
 		p = NoTTY
 	} else {
 		p = envp
@@ -83,7 +85,7 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 		if p > Ascii {
 			p = Ascii
 		}
-		return
+		return p
 	}
 
 	if cliColorForced(env) {
@@ -94,16 +96,21 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 			p = envp
 		}
 
-		return
+		return p
 	}
 
 	if cliColor(env) {
-		if isatty && !isDumb && p < ANSI {
+		if isatty && !isDummy && p < ANSI {
 			p = ANSI
 		}
 	}
 
 	return p
+}
+
+func envSkipTTYCheck(env environ) bool {
+	skip, _ := strconv.ParseBool(env.get("SKIP_TTY_CHECK"))
+	return skip
 }
 
 // envNoColor returns true if the environment variables explicitly disable color output
@@ -132,7 +139,7 @@ func colorTerm(env environ) bool {
 // envColorProfile returns infers the color profile from the environment.
 func envColorProfile(env environ) (p Profile) {
 	term, ok := env.lookup("TERM")
-	if !ok || len(term) == 0 || term == "dumb" {
+	if !ok || len(term) == 0 || term == isDummy {
 		p = NoTTY
 		if runtime.GOOS == "windows" {
 			// Use Windows API to detect color profile. Windows Terminal and
@@ -184,15 +191,15 @@ func envColorProfile(env environ) (p Profile) {
 		p = ANSI256
 	}
 
-	return
+	return p
 }
 
 // Terminfo returns the color profile based on the terminal's terminfo
 // database. This relies on the Tc and RGB capabilities to determine if the
 // terminal supports TrueColor.
-// If term is empty or "dumb", it returns NoTTY.
+// If term is empty or "dummy", it returns NoTTY.
 func Terminfo(term string) (p Profile) {
-	if len(term) == 0 || term == "dumb" {
+	if len(term) == 0 || term == "dummy" {
 		return NoTTY
 	}
 
@@ -277,11 +284,4 @@ func (e environ) lookup(key string) (string, bool) {
 func (e environ) get(key string) string {
 	v, _ := e.lookup(key)
 	return v
-}
-
-func max[T ~byte | ~int](a, b T) T {
-	if a > b {
-		return a
-	}
-	return b
 }

@@ -166,7 +166,7 @@ func TestWriter(t *testing.T) {
 }
 
 func TestNewWriterPanic(t *testing.T) {
-	_ = NewWriter(io.Discard, []string{"TERM=dumb"})
+	_ = NewWriter(io.Discard, []string{"TERM=dummy"})
 }
 
 func TestNewWriterOsEnviron(t *testing.T) {

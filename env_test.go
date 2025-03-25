@@ -24,30 +24,30 @@ var cases = []struct {
 	},
 	{
 		name:     "no tty",
-		environ:  []string{"TERM=dumb"},
+		environ:  []string{"TERM=dummy"},
 		expected: NoTTY,
 	},
 	{
-		name: "dumb term, truecolor, not forced",
+		name: "dummy term, truecolor, not forced",
 		environ: []string{
-			"TERM=dumb",
+			"TERM=dummy",
 			"COLORTERM=truecolor",
 		},
 		expected: NoTTY,
 	},
 	{
-		name: "dumb term, truecolor, forced",
+		name: "dummy term, truecolor, forced",
 		environ: []string{
-			"TERM=dumb",
+			"TERM=dummy",
 			"COLORTERM=truecolor",
 			"CLICOLOR_FORCE=1",
 		},
 		expected: TrueColor,
 	},
 	{
-		name: "dumb term, CLICOLOR_FORCE=1",
+		name: "dummy term, CLICOLOR_FORCE=1",
 		environ: []string{
-			"TERM=dumb",
+			"TERM=dummy",
 			"CLICOLOR_FORCE=1",
 		},
 		expected: func() Profile {
@@ -60,9 +60,9 @@ var cases = []struct {
 		}(),
 	},
 	{
-		name: "dumb term, CLICOLOR=1",
+		name: "dummy term, CLICOLOR=1",
 		environ: []string{
-			"TERM=dumb",
+			"TERM=dummy",
 			"CLICOLOR=1",
 		},
 		expected: NoTTY,
