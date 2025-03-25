@@ -30,7 +30,7 @@ import (
 func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
 	environ := newEnviron(env)
-	isatty := envTTYForced(environ) || (ok && term.IsTerminal(out.Fd()))
+	isatty := isTTYForced(environ) || (ok && term.IsTerminal(out.Fd()))
 	term := environ.get("TERM")
 	isDumb := term == "dumb"
 	envp := colorProfile(isatty, environ)
@@ -123,7 +123,7 @@ func cliColorForced(env environ) bool {
 	return cliColorForce
 }
 
-func envTTYForced(env environ) bool {
+func isTTYForced(env environ) bool {
 	skip, _ := strconv.ParseBool(env.get("TTY_FORCE"))
 	return skip
 }
