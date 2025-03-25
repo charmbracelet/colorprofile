@@ -12,14 +12,14 @@ import (
 	"github.com/xo/terminfo"
 )
 
-const isDummy = "dummy"
+const isDumb = "dumb"
 
 // Detect returns the color profile based on the terminal output, and
 // environment variables. This respects NO_COLOR, CLICOLOR, and CLICOLOR_FORCE
 // environment variables.
 //
 // The rules as follows:
-//   - TERM=dummy is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
+//   - TERM=dumb is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
 //   - If COLORTERM=truecolor, and the profile is not NoTTY, it gest upgraded to TrueColor.
 //   - Using any 256 color terminal (e.g. TERM=xterm-256color) will set the profile to ANSI256.
 //   - Using any color terminal (e.g. TERM=xterm-color) will set the profile to ANSI.
@@ -34,14 +34,14 @@ func Detect(output io.Writer, env []string) Profile {
 	environ := newEnviron(env)
 	isatty := envSkipTTYCheck(environ) || (ok && term.IsTerminal(out.Fd()))
 	term := environ.get("TERM")
-	isDummy := term == "dummy"
+	isDumb := term == isDumb
 	envp := colorProfile(isatty, environ)
 	if envp == TrueColor || envNoColor(environ) {
 		// We already know we have TrueColor, or NO_COLOR is set.
 		return envp
 	}
 
-	if isatty && !isDummy {
+	if isatty && !isDumb {
 		tip := Terminfo(term)
 		tmuxp := tmux(environ)
 
@@ -56,7 +56,7 @@ func Detect(output io.Writer, env []string) Profile {
 // This respects NO_COLOR, CLICOLOR, and CLICOLOR_FORCE environment variables.
 //
 // The rules as follows:
-//   - TERM=dummy is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
+//   - TERM=dumb is always treated as NoTTY unless CLICOLOR_FORCE=1 is set.
 //   - If COLORTERM=truecolor, and the profile is not NoTTY, it gest upgraded to TrueColor.
 //   - Using any 256 color terminal (e.g. TERM=xterm-256color) will set the profile to ANSI256.
 //   - Using any color terminal (e.g. TERM=xterm-color) will set the profile to ANSI.
@@ -71,11 +71,11 @@ func Env(env []string) (p Profile) {
 }
 
 func colorProfile(isatty bool, env environ) (p Profile) {
-	isDummy := env.get("TERM") == isDummy
+	isDumb := env.get("TERM") == isDumb
 	envp := envColorProfile(env)
-	if !isatty || isDummy {
+	if !isatty || isDumb {
 		// Check if the output is a terminal.
-		// Treat dummy terminals as NoTTY
+		// Treat dumb terminals as NoTTY
 		p = NoTTY
 	} else {
 		p = envp
@@ -100,7 +100,7 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 	}
 
 	if cliColor(env) {
-		if isatty && !isDummy && p < ANSI {
+		if isatty && !isDumb && p < ANSI {
 			p = ANSI
 		}
 	}
@@ -109,7 +109,7 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 }
 
 func envSkipTTYCheck(env environ) bool {
-	skip, _ := strconv.ParseBool(env.get("SKIP_TTY_CHECK"))
+	skip, _ := strconv.ParseBool(env.get("NO_TTY_CHECK"))
 	return skip
 }
 
@@ -139,7 +139,7 @@ func colorTerm(env environ) bool {
 // envColorProfile returns infers the color profile from the environment.
 func envColorProfile(env environ) (p Profile) {
 	term, ok := env.lookup("TERM")
-	if !ok || len(term) == 0 || term == isDummy {
+	if !ok || len(term) == 0 || term == isDumb {
 		p = NoTTY
 		if runtime.GOOS == "windows" {
 			// Use Windows API to detect color profile. Windows Terminal and
@@ -197,9 +197,9 @@ func envColorProfile(env environ) (p Profile) {
 // Terminfo returns the color profile based on the terminal's terminfo
 // database. This relies on the Tc and RGB capabilities to determine if the
 // terminal supports TrueColor.
-// If term is empty or "dummy", it returns NoTTY.
+// If term is empty or "dumb", it returns NoTTY.
 func Terminfo(term string) (p Profile) {
-	if len(term) == 0 || term == "dummy" {
+	if len(term) == 0 || term == "dumb" {
 		return NoTTY
 	}
 

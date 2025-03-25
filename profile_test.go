@@ -74,8 +74,8 @@ func TestDetectionByEnvironment(t *testing.T) {
 		environ  []string
 		expected Profile
 	}{
-		"TERM is set to dummy": {
-			environ:  []string{"TERM=dummy"},
+		"TERM is set to dumb": {
+			environ:  []string{"TERM=dumb"},
 			expected: NoTTY,
 		},
 		"TERM set to xterm": {
