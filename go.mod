@@ -2,8 +2,6 @@ module github.com/charmbracelet/colorprofile
 
 go 1.23.0
 
-toolchain go1.24.0
-
 require (
 	github.com/charmbracelet/x/ansi v0.8.0
 	github.com/charmbracelet/x/term v0.2.1
