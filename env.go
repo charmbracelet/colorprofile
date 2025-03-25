@@ -32,7 +32,7 @@ const dumbTerm = "dumb"
 func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
 	environ := newEnviron(env)
-	isatty := ok && term.IsTerminal(out.Fd())
+	isatty := isTTYForced(environ) || (ok && term.IsTerminal(out.Fd()))
 	term := environ.get("TERM")
 	isDumb := term == dumbTerm
 	envp := colorProfile(isatty, environ)
@@ -123,6 +123,11 @@ func cliColor(env environ) bool {
 func cliColorForced(env environ) bool {
 	cliColorForce, _ := strconv.ParseBool(env.get("CLICOLOR_FORCE"))
 	return cliColorForce
+}
+
+func isTTYForced(env environ) bool {
+	skip, _ := strconv.ParseBool(env.get("TTY_FORCE"))
+	return skip
 }
 
 func colorTerm(env environ) bool {
