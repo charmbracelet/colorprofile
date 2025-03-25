@@ -29,8 +29,8 @@ import (
 // See https://no-color.org/ and https://bixense.com/clicolors/ for more information.
 func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
-	isatty := ok && term.IsTerminal(out.Fd())
 	environ := newEnviron(env)
+	isatty := isTTYForced(environ) || (ok && term.IsTerminal(out.Fd()))
 	term := environ.get("TERM")
 	isDumb := term == "dumb"
 	envp := colorProfile(isatty, environ)
@@ -121,6 +121,11 @@ func cliColor(env environ) bool {
 func cliColorForced(env environ) bool {
 	cliColorForce, _ := strconv.ParseBool(env.get("CLICOLOR_FORCE"))
 	return cliColorForce
+}
+
+func isTTYForced(env environ) bool {
+	skip, _ := strconv.ParseBool(env.get("TTY_FORCE"))
+	return skip
 }
 
 func colorTerm(env environ) bool {
