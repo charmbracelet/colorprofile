@@ -32,7 +32,7 @@ const isDumb = "dumb"
 func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
 	environ := newEnviron(env)
-	isatty := envSkipTTYCheck(environ) || (ok && term.IsTerminal(out.Fd()))
+	isatty := ok && term.IsTerminal(out.Fd())
 	term := environ.get("TERM")
 	isDumb := term == isDumb
 	envp := colorProfile(isatty, environ)
@@ -106,11 +106,6 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 	}
 
 	return p
-}
-
-func envSkipTTYCheck(env environ) bool {
-	skip, _ := strconv.ParseBool(env.get("NO_TTY_CHECK"))
-	return skip
 }
 
 // envNoColor returns true if the environment variables explicitly disable color output
