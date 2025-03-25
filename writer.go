@@ -2,6 +2,7 @@ package colorprofile
 
 import (
 	"bytes"
+	"fmt"
 	"image/color"
 	"io"
 	"strconv"
@@ -43,7 +44,7 @@ func (w *Writer) Write(p []byte) (int, error) {
 	case Ascii, ANSI, ANSI256:
 		return w.downsample(p)
 	default:
-		return w.downsample(p)
+		return 0, fmt.Errorf("invalid profile: %v", w.Profile)
 	}
 }
 
