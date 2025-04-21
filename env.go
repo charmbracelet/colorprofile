@@ -72,7 +72,7 @@ func Env(env []string) (p Profile) {
 
 func colorProfile(isatty bool, env environ) (p Profile) {
 	term, ok := env.lookup("TERM")
-	isDumb := !ok || term == dumbTerm
+	isDumb := (!ok && runtime.GOOS != "windows") || term == dumbTerm
 	envp := envColorProfile(env)
 	if !isatty || isDumb {
 		// Check if the output is a terminal.
