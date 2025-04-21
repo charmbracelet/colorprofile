@@ -210,6 +210,13 @@ var cases = []struct {
 			}
 		}(),
 	},
+	{
+		name: "direct color xterm terminal",
+		environ: []string{
+			"TERM=xterm-direct",
+		},
+		expected: TrueColor,
+	},
 }
 
 func TestEnvColorProfile(t *testing.T) {
