@@ -192,6 +192,11 @@ func envColorProfile(env environ) (p Profile) {
 		p = ANSI256
 	}
 
+	// Direct color terminals support true colors.
+	if strings.HasSuffix(term, "direct") {
+		return TrueColor
+	}
+
 	return //nolint:nakedret
 }
 
