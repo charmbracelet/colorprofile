@@ -196,6 +196,20 @@ var cases = []struct {
 		},
 		expected: ANSI256,
 	},
+	{
+		name: "ignore COLORTERM when no TERM is defined",
+		environ: []string{
+			"COLORTERM=truecolor",
+		},
+		expected: func() Profile {
+			if runtime.GOOS == "windows" {
+				p, _ := windowsColorProfile(map[string]string{})
+				return p
+			} else {
+				return NoTTY
+			}
+		}(),
+	},
 }
 
 func TestEnvColorProfile(t *testing.T) {
