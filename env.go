@@ -33,8 +33,8 @@ func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
 	environ := newEnviron(env)
 	isatty := isTTYForced(environ) || (ok && term.IsTerminal(out.Fd()))
-	term := environ.get("TERM")
-	isDumb := term == dumbTerm
+	term, ok := environ.lookup("TERM")
+	isDumb := !ok || term == dumbTerm
 	envp := colorProfile(isatty, environ)
 	if envp == TrueColor || envNoColor(environ) {
 		// We already know we have TrueColor, or NO_COLOR is set.
@@ -71,7 +71,8 @@ func Env(env []string) (p Profile) {
 }
 
 func colorProfile(isatty bool, env environ) (p Profile) {
-	isDumb := env.get("TERM") == dumbTerm
+	term, ok := env.lookup("TERM")
+	isDumb := !ok || term == dumbTerm
 	envp := envColorProfile(env)
 	if !isatty || isDumb {
 		// Check if the output is a terminal.
