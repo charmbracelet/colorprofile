@@ -84,9 +84,7 @@ fmt.Fprintf(w, myFancyANSI) // not as fancy
 
 ## Contributing
 
-See [contributing][contribute].
-
-[contribute]: https://github.com/charmbracelet/colorprofile/contribute
+See [contributing](https://github.com/charmbracelet/.github/blob/main/CONTRIBUTING.md).
 
 ## Feedback
 
