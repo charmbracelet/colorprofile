@@ -79,7 +79,7 @@ func (p Profile) Convert(c color.Color) (cc color.Color) {
 		mu.Unlock()
 	}()
 
-	switch c := c.(type) {
+	switch c.(type) {
 	case ansi.BasicColor:
 		return c
 
