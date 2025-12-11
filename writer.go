@@ -112,7 +112,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if w.Profile < ANSI {
 				continue
 			}
-			style = style.DefaultForegroundColor()
+			style = style.ForegroundColor(nil)
 		case 40, 41, 42, 43, 44, 45, 46, 47: // 8-bit background color
 			if w.Profile < ANSI {
 				continue
@@ -132,7 +132,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if w.Profile < ANSI {
 				continue
 			}
-			style = style.DefaultBackgroundColor()
+			style = style.BackgroundColor(nil)
 		case 58: // 16 or 24-bit underline color
 			var c color.Color
 			if n := ansi.ReadStyleColor(params[i:], &c); n > 0 {
@@ -146,7 +146,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if w.Profile < ANSI {
 				continue
 			}
-			style = style.DefaultUnderlineColor()
+			style = style.UnderlineColor(nil)
 		case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
 			if w.Profile < ANSI {
 				continue
