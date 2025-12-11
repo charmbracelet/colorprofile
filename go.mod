@@ -3,7 +3,7 @@ module github.com/charmbracelet/colorprofile
 go 1.24.2
 
 require (
-	github.com/charmbracelet/x/ansi v0.11.2
+	github.com/charmbracelet/x/ansi v0.11.3
 	github.com/charmbracelet/x/term v0.2.2
 	github.com/lucasb-eyer/go-colorful v1.3.0
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/clipperhouse/displaywidth v0.6.0 // indirect
+	github.com/clipperhouse/displaywidth v0.6.1 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
