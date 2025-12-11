@@ -177,9 +177,13 @@ func TestNewWriterOsEnviron(t *testing.T) {
 }
 
 func BenchmarkWriter(b *testing.B) {
-	w := &Writer{&bytes.Buffer{}, ANSI}
-	input := []byte("\x1b[1;3;59mhello\x1b[m \x1b[38;2;255;133;55mworld\x1b[m")
-	for i := 0; i < b.N; i++ {
-		_, _ = w.Write(input)
+	input := []byte("\x1b[1;3;59mthe quick\x1b[m \x1b[1;2;48;5;52mbrown\x1b[49m fox \x1b[38;2;255;0;0mjumps\x1b[m over the lazy \x1b[31mdog\x1b[m\n")
+	for _, profile := range []Profile{TrueColor, ANSI256, ANSI, ASCII, NoTTY, Unknown} {
+		w := &Writer{Profile: profile, Forward: io.Discard}
+		b.Run(profile.String(), func(b *testing.B) {
+			for b.Loop() {
+				_, _ = w.Write(input)
+			}
+		})
 	}
 }
