@@ -9,7 +9,17 @@ import (
 func printBlock(c ansi.Color, fg ansi.Color) {
 	r, g, b, _ := c.RGBA()
 	block := ansi.NewStyle().BackgroundColor(c).ForegroundColor(fg)
-	fmt.Print(block.Styled(fmt.Sprintf(" #%02X%02X%02X ", r>>8, g>>8, b>>8)))
+	format := " #%02X%02X%02X "
+	args := []interface{}{r >> 8, g >> 8, b >> 8}
+	switch c := c.(type) {
+	case ansi.BasicColor:
+		format = " %2d " + format
+		args = append([]interface{}{int(c)}, args...)
+	case ansi.IndexedColor:
+		format = " %3d " + format
+		args = append([]interface{}{int(c)}, args...)
+	}
+	fmt.Print(block.Styled(fmt.Sprintf(format, args...)))
 }
 
 func main() {
