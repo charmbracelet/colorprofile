@@ -96,7 +96,7 @@ var cases = []struct {
 			"TERM=xterm-256color",
 			"NO_COLOR=1",
 		},
-		expected: Ascii,
+		expected: ASCII,
 	},
 	{
 		name: "xterm",
@@ -111,7 +111,7 @@ var cases = []struct {
 			"TERM=xterm",
 			"NO_COLOR=1",
 		},
-		expected: Ascii,
+		expected: ASCII,
 	},
 	{
 		name: "xterm, CLICOLOR=1",
@@ -150,7 +150,7 @@ var cases = []struct {
 			"NO_COLOR=1",
 			"CLICOLOR_FORCE=1",
 		},
-		expected: Ascii,
+		expected: ASCII,
 	},
 	{
 		name: "Windows Terminal",

@@ -13,7 +13,7 @@ var writers = map[Profile]func(io.Writer) *Writer{
 	TrueColor: func(w io.Writer) *Writer { return &Writer{w, TrueColor} },
 	ANSI256:   func(w io.Writer) *Writer { return &Writer{w, ANSI256} },
 	ANSI:      func(w io.Writer) *Writer { return &Writer{w, ANSI} },
-	Ascii:     func(w io.Writer) *Writer { return &Writer{w, Ascii} },
+	ASCII:     func(w io.Writer) *Writer { return &Writer{w, ASCII} },
 	NoTTY:     func(w io.Writer) *Writer { return &Writer{w, NoTTY} },
 }
 
@@ -152,7 +152,7 @@ func TestWriter(t *testing.T) {
 					expected = c.expectedANSI256
 				case ANSI:
 					expected = c.expectedANSI
-				case Ascii:
+				case ASCII:
 					expected = c.expectedAscii
 				case NoTTY:
 					expected = ansi.Strip(c.input)

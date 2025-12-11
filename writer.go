@@ -41,7 +41,7 @@ func (w *Writer) Write(p []byte) (int, error) {
 		return w.Forward.Write(p) //nolint:wrapcheck
 	case NoTTY:
 		return io.WriteString(w.Forward, ansi.Strip(string(p))) //nolint:wrapcheck
-	case Ascii, ANSI, ANSI256:
+	case ASCII, ANSI, ANSI256:
 		return w.downsample(p)
 	default:
 		return 0, fmt.Errorf("invalid profile: %v", w.Profile)
