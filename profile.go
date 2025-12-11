@@ -96,11 +96,13 @@ func (p Profile) Convert(c color.Color) (cc color.Color) {
 		return c
 
 	default:
-		if p == ANSI256 {
+		switch p {
+		case ANSI256:
 			return ansi.Convert256(c)
-		} else if p == ANSI {
+		case ANSI:
 			return ansi.Convert16(c)
+		default:
+			return c
 		}
-		return c
 	}
 }
