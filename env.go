@@ -173,6 +173,11 @@ func envColorProfile(env environ) (p Profile) {
 		}
 	}
 
+	if len(env["WT_SESSION"]) > 0 {
+		// Windows Terminal supports TrueColor
+		return TrueColor
+	}
+
 	if isCloudShell, _ := strconv.ParseBool(env.get("GOOGLE_CLOUD_SHELL")); isCloudShell {
 		return TrueColor
 	}

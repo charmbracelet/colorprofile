@@ -167,6 +167,17 @@ var cases = []struct {
 		}(),
 	},
 	{
+		name: "Windows Terminal bash.exe",
+		environ: []string{
+			"TERM=xterm-256color",
+			"WT_SESSION=1",
+		},
+		expected: func() Profile {
+			// Windows Terminal supports TrueColor
+			return TrueColor
+		}(),
+	},
+	{
 		name: "screen default",
 		environ: []string{
 			"TERM=screen",
