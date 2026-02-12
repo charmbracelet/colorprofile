@@ -251,7 +251,7 @@ func tmux(env environ) (p Profile) {
 		return
 	}
 
-	for _, line := range bytes.Split(out, []byte("\n")) {
+	for line := range bytes.SplitSeq(out, []byte("\n")) {
 		if (bytes.Contains(line, []byte("Tc")) || bytes.Contains(line, []byte("RGB"))) &&
 			bytes.Contains(line, []byte("true")) {
 			return TrueColor
