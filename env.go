@@ -2,6 +2,7 @@ package colorprofile
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os/exec"
 	"runtime"
@@ -244,7 +245,7 @@ func tmux(env environ) (p Profile) {
 	// Check if tmux has either Tc or RGB capabilities. Otherwise, return
 	// ANSI256.
 	p = ANSI256
-	cmd := exec.Command("tmux", "info")
+	cmd := exec.CommandContext(context.Background(), "tmux", "info")
 	out, err := cmd.Output()
 	if err != nil {
 		return
