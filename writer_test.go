@@ -1,6 +1,7 @@
 package colorprofile
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"os"
@@ -173,6 +174,29 @@ func TestNewWriterOsEnviron(t *testing.T) {
 	w := NewWriter(io.Discard, os.Environ())
 	if w.Profile != NoTTY {
 		t.Errorf("expected NoTTY, got %v", w.Profile)
+	}
+}
+
+func TestWriterMiddleware(t *testing.T) {
+	for _, p := range []Profile{TrueColor, ANSI256, ANSI, ASCII, NoTTY} {
+		var buf bytes.Buffer
+		w := &Writer{
+			Forward: &buf,
+			Profile: p,
+		}
+
+		t.Logf("profile: %v", w.Profile)
+
+		bw := bufio.NewWriter(w)
+		if _, err := bw.WriteString("\x1b[38;2;20;249;10mhello\x1b[0m\n"); err != nil {
+			t.Fatalf("write error: %v\n", err)
+		}
+
+		if err := bw.Flush(); err != nil {
+			t.Fatalf("flush error: %v\n", err)
+		}
+
+		t.Logf("output: %q", buf.String())
 	}
 }
 
