@@ -1,0 +1,213 @@
+package colorprofile
+
+import (
+	"bufio"
+	"bytes"
+	"io"
+	"os"
+	"testing"
+
+	"github.com/charmbracelet/x/ansi"
+)
+
+var writers = map[Profile]func(io.Writer) *Writer{
+	TrueColor: func(w io.Writer) *Writer { return &Writer{w, TrueColor} },
+	ANSI256:   func(w io.Writer) *Writer { return &Writer{w, ANSI256} },
+	ANSI:      func(w io.Writer) *Writer { return &Writer{w, ANSI} },
+	ASCII:     func(w io.Writer) *Writer { return &Writer{w, ASCII} },
+	NoTTY:     func(w io.Writer) *Writer { return &Writer{w, NoTTY} },
+}
+
+var writer_cases = []struct {
+	name              string
+	input             string
+	expectedTrueColor string
+	expectedANSI256   string
+	expectedANSI      string
+	expectedAscii     string
+}{
+	{
+		name: "empty",
+	},
+	{
+		name:              "no styles",
+		input:             "hello world",
+		expectedTrueColor: "hello world",
+		expectedANSI256:   "hello world",
+		expectedANSI:      "hello world",
+		expectedAscii:     "hello world",
+	},
+	{
+		name:              "simple style attributes",
+		input:             "hello \x1b[1mworld\x1b[m",
+		expectedTrueColor: "hello \x1b[1mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[1mworld\x1b[m",
+		expectedANSI:      "hello \x1b[1mworld\x1b[m",
+		expectedAscii:     "hello \x1b[1mworld\x1b[m",
+	},
+	{
+		name:              "simple ansi color fg",
+		input:             "hello \x1b[31mworld\x1b[m",
+		expectedTrueColor: "hello \x1b[31mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[31mworld\x1b[m",
+		expectedANSI:      "hello \x1b[31mworld\x1b[m",
+		expectedAscii:     "hello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "default fg color after ansi color",
+		input:             "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedTrueColor: "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedANSI256:   "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedANSI:      "\x1b[31mhello \x1b[39mworld\x1b[m",
+		expectedAscii:     "\x1b[mhello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "ansi color fg and bg",
+		input:             "\x1b[31;42mhello world\x1b[m",
+		expectedTrueColor: "\x1b[31;42mhello world\x1b[m",
+		expectedANSI256:   "\x1b[31;42mhello world\x1b[m",
+		expectedANSI:      "\x1b[31;42mhello world\x1b[m",
+		expectedAscii:     "\x1b[mhello world\x1b[m",
+	},
+	{
+		name:              "bright ansi color fg and bg",
+		input:             "\x1b[91;102mhello world\x1b[m",
+		expectedTrueColor: "\x1b[91;102mhello world\x1b[m",
+		expectedANSI256:   "\x1b[91;102mhello world\x1b[m",
+		expectedANSI:      "\x1b[91;102mhello world\x1b[m",
+		expectedAscii:     "\x1b[mhello world\x1b[m",
+	},
+	{
+		name:              "simple 256 color fg",
+		input:             "hello \x1b[38;5;196mworld\x1b[m",
+		expectedTrueColor: "hello \x1b[38;5;196mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[38;5;196mworld\x1b[m",
+		expectedANSI:      "hello \x1b[91mworld\x1b[m",
+		expectedAscii:     "hello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "256 color bg",
+		input:             "\x1b[48;5;196mhello world\x1b[m",
+		expectedTrueColor: "\x1b[48;5;196mhello world\x1b[m",
+		expectedANSI256:   "\x1b[48;5;196mhello world\x1b[m",
+		expectedANSI:      "\x1b[101mhello world\x1b[m",
+		expectedAscii:     "\x1b[mhello world\x1b[m",
+	},
+	{
+		name:              "simple true color bg",
+		input:             "hello \x1b[38;2;255;133;55mworld\x1b[m", // #ff8537
+		expectedTrueColor: "hello \x1b[38;2;255;133;55mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[38;5;209mworld\x1b[m",
+		expectedANSI:      "hello \x1b[91mworld\x1b[m",
+		expectedAscii:     "hello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "itu true color bg",
+		input:             "hello \x1b[38:2::255:133:55mworld\x1b[m", // #ff8537
+		expectedTrueColor: "hello \x1b[38:2::255:133:55mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[38;5;209mworld\x1b[m",
+		expectedANSI:      "hello \x1b[91mworld\x1b[m",
+		expectedAscii:     "hello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "simple ansi 256 color bg",
+		input:             "hello \x1b[48:5:196mworld\x1b[m",
+		expectedTrueColor: "hello \x1b[48:5:196mworld\x1b[m",
+		expectedANSI256:   "hello \x1b[48;5;196mworld\x1b[m",
+		expectedANSI:      "hello \x1b[101mworld\x1b[m",
+		expectedAscii:     "hello \x1b[mworld\x1b[m",
+	},
+	{
+		name:              "simple missing param",
+		input:             "\x1b[31mhello \x1b[;1mworld",
+		expectedTrueColor: "\x1b[31mhello \x1b[;1mworld",
+		expectedANSI256:   "\x1b[31mhello \x1b[;1mworld",
+		expectedANSI:      "\x1b[31mhello \x1b[;1mworld",
+		expectedAscii:     "\x1b[mhello \x1b[;1mworld",
+	},
+	{
+		name:              "color with other attributes",
+		input:             "\x1b[1;38;5;204mhello \x1b[38;5;204mworld\x1b[m",
+		expectedTrueColor: "\x1b[1;38;5;204mhello \x1b[38;5;204mworld\x1b[m",
+		expectedANSI256:   "\x1b[1;38;5;204mhello \x1b[38;5;204mworld\x1b[m",
+		expectedANSI:      "\x1b[1;91mhello \x1b[91mworld\x1b[m",
+		expectedAscii:     "\x1b[1mhello \x1b[mworld\x1b[m",
+	},
+}
+
+func TestWriter(t *testing.T) {
+	for i, c := range writer_cases {
+		for profile, writer := range writers {
+			t.Run(c.name+"-"+profile.String(), func(t *testing.T) {
+				var buf bytes.Buffer
+				w := writer(&buf)
+				_, err := w.Write([]byte(c.input))
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				var expected string
+				switch profile {
+				case TrueColor:
+					expected = c.expectedTrueColor
+				case ANSI256:
+					expected = c.expectedANSI256
+				case ANSI:
+					expected = c.expectedANSI
+				case ASCII:
+					expected = c.expectedAscii
+				case NoTTY:
+					expected = ansi.Strip(c.input)
+				}
+				if got := buf.String(); got != expected {
+					t.Errorf("case: %d, got: %q, expected: %q", i+1, got, expected)
+				}
+			})
+		}
+	}
+}
+
+func TestNewWriterPanic(t *testing.T) {
+	_ = NewWriter(io.Discard, []string{"TERM=dumb"})
+}
+
+func TestNewWriterOsEnviron(t *testing.T) {
+	w := NewWriter(io.Discard, os.Environ())
+	if w.Profile != NoTTY {
+		t.Errorf("expected NoTTY, got %v", w.Profile)
+	}
+}
+
+func TestWriterMiddleware(t *testing.T) {
+	for _, p := range []Profile{TrueColor, ANSI256, ANSI, ASCII, NoTTY} {
+		var buf bytes.Buffer
+		w := &Writer{
+			Forward: &buf,
+			Profile: p,
+		}
+
+		t.Logf("profile: %v", w.Profile)
+
+		bw := bufio.NewWriter(w)
+		if _, err := bw.WriteString("\x1b[38;2;20;249;10mhello\x1b[0m\n"); err != nil {
+			t.Fatalf("write error: %v\n", err)
+		}
+
+		if err := bw.Flush(); err != nil {
+			t.Fatalf("flush error: %v\n", err)
+		}
+
+		t.Logf("output: %q", buf.String())
+	}
+}
+
+func BenchmarkWriter(b *testing.B) {
+	input := []byte("\x1b[1;3;59mthe quick\x1b[m \x1b[1;2;48;5;52mbrown\x1b[49m fox \x1b[38;2;255;0;0mjumps\x1b[m over the lazy \x1b[31mdog\x1b[m\n")
+	for _, profile := range []Profile{TrueColor, ANSI256, ANSI, ASCII, NoTTY, Unknown} {
+		w := &Writer{Profile: profile, Forward: io.Discard}
+		b.Run(profile.String(), func(b *testing.B) {
+			for b.Loop() {
+				_, _ = w.Write(input)
+			}
+		})
+	}
+}

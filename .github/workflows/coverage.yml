@@ -1,0 +1,11 @@
+name: coverage
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+jobs:
+  coverage:
+    uses: charmbracelet/meta/.github/workflows/coverage.yml@main
