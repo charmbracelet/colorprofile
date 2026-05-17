@@ -90,6 +90,22 @@ func colorProfile(isatty bool, env environ) (p Profile) {
 		return //nolint:nakedret
 	}
 
+	if forced, ok := forceColorProfile(env); ok {
+		if forced == ASCII {
+			if p > ASCII {
+				p = ASCII
+			}
+			return p
+		}
+		if p < forced {
+			p = forced
+		}
+		if envp > p {
+			p = envp
+		}
+		return p
+	}
+
 	if cliColorForced(env) {
 		if p < ANSI {
 			p = ANSI
@@ -125,6 +141,35 @@ func cliColor(env environ) bool {
 func cliColorForced(env environ) bool {
 	cliColorForce, _ := strconv.ParseBool(env.get("CLICOLOR_FORCE"))
 	return cliColorForce
+}
+
+// forceColorProfile interprets FORCE_COLOR per https://force-color.org.
+// The second return value indicates whether FORCE_COLOR was set.
+func forceColorProfile(env environ) (Profile, bool) {
+	v, ok := env.lookup("FORCE_COLOR")
+	if !ok {
+		return Unknown, false
+	}
+	if v == "" {
+		return ANSI, true
+	}
+	if v == "0" || strings.EqualFold(v, "false") {
+		return ASCII, true
+	}
+	level, err := strconv.Atoi(v)
+	if err != nil {
+		return ANSI, true
+	}
+	switch {
+	case level <= 0:
+		return ASCII, true
+	case level == 1:
+		return ANSI, true
+	case level == 2:
+		return ANSI256, true
+	default:
+		return TrueColor, true
+	}
 }
 
 func isTTYForced(env environ) bool {

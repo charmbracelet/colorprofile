@@ -130,6 +130,30 @@ var cases = []struct {
 		expected: ANSI,
 	},
 	{
+		name: "xterm, FORCE_COLOR=1",
+		environ: []string{
+			"TERM=xterm",
+			"FORCE_COLOR=1",
+		},
+		expected: ANSI,
+	},
+	{
+		name: "xterm, FORCE_COLOR=3",
+		environ: []string{
+			"TERM=xterm",
+			"FORCE_COLOR=3",
+		},
+		expected: TrueColor,
+	},
+	{
+		name: "xterm, FORCE_COLOR=0",
+		environ: []string{
+			"TERM=xterm",
+			"FORCE_COLOR=0",
+		},
+		expected: ASCII,
+	},
+	{
 		name: "xterm-16color",
 		environ: []string{
 			"TERM=xterm-16color",
