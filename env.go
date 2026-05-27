@@ -183,9 +183,11 @@ func envColorProfile(env environ) (p Profile) {
 		return TrueColor
 	}
 
-	// GNU Screen doesn't support TrueColor
-	// Tmux doesn't support $COLORTERM
-	if colorTerm(env) && !strings.HasPrefix(term, "screen") && !strings.HasPrefix(term, "tmux") {
+	// GNU Screen doesn't support TrueColor. Tmux did historically have the
+	// same limitation, which is why this used to exclude tmux as well, but
+	// modern tmux (3.2+) supports truecolor and propagates COLORTERM through
+	// to inner shells, so we should honor it. See #76.
+	if colorTerm(env) && !strings.HasPrefix(term, "screen") {
 		return TrueColor
 	}
 

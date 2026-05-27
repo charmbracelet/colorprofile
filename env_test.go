@@ -193,15 +193,24 @@ var cases = []struct {
 		expected: ANSI256,
 	},
 	{
-		name: "tmux colorterm",
+		// Modern tmux propagates COLORTERM through to inner shells, see #76.
+		name: "tmux colorterm truecolor",
 		environ: []string{
 			"TERM=tmux",
 			"COLORTERM=truecolor",
 		},
-		expected: ANSI256,
+		expected: TrueColor,
 	},
 	{
-		name: "tmux 256color",
+		name: "tmux-256color colorterm truecolor",
+		environ: []string{
+			"TERM=tmux-256color",
+			"COLORTERM=truecolor",
+		},
+		expected: TrueColor,
+	},
+	{
+		name: "tmux 256color without colorterm stays ANSI256",
 		environ: []string{
 			"TERM=tmux-256color",
 		},
