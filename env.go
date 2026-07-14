@@ -123,8 +123,21 @@ func cliColor(env environ) bool {
 }
 
 func cliColorForced(env environ) bool {
-	cliColorForce, _ := strconv.ParseBool(env.get("CLICOLOR_FORCE"))
-	return cliColorForce
+	if v, _ := strconv.ParseBool(env.get("CLICOLOR_FORCE")); v {
+		return true
+	}
+	// FORCE_COLOR is the convention popularised by chalk / supports-color.
+	// https://force-color.org/. Any non-empty value other than "0" /
+	// "false" is interpreted as "force colour on".
+	if v := env.get("FORCE_COLOR"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			return b
+		}
+		if n, err := strconv.Atoi(v); err == nil {
+			return n > 0
+		}
+	}
+	return false
 }
 
 func isTTYForced(env environ) bool {
