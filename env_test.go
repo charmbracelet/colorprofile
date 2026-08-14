@@ -68,6 +68,28 @@ var cases = []struct {
 		expected: NoTTY,
 	},
 	{
+		// #77: FORCE_COLOR=1 should force colour on, same as CLICOLOR_FORCE=1.
+		name: "dumb term, FORCE_COLOR=1",
+		environ: []string{
+			"TERM=dumb",
+			"FORCE_COLOR=1",
+		},
+		expected: func() Profile {
+			if runtime.GOOS == "windows" {
+				return TrueColor
+			}
+			return ANSI
+		}(),
+	},
+	{
+		name: "FORCE_COLOR=0 does not force",
+		environ: []string{
+			"TERM=dumb",
+			"FORCE_COLOR=0",
+		},
+		expected: NoTTY,
+	},
+	{
 		name: "xterm-256color",
 		environ: []string{
 			"TERM=xterm-256color",
